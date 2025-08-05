@@ -1,0 +1,39 @@
+# GitHub Pages Configuration
+
+# Enable GitHub Pages
+url: "https://yourusername.github.io"
+baseurl: "/NewLifeJuice"
+
+# Site settings
+title: "New Life Juice - Premium Fresh Juice Delivery"
+description: "Order healthy, delicious juices made from the finest ingredients. Fast delivery, premium quality, exceptional taste."
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+
+# Exclude files from build
+exclude:
+  - README.md
+  - LICENSE
+  - .gitignore
+  - .github/
+
+# Include custom 404 page
+include:
+  - _404.html
+
+# SEO and social
+author: "New Life Juice"
+twitter:
+  username: newlifejuice
+  card: summary_large_image
+
+# Analytics (add your tracking ID)
+google_analytics: "G-XXXXXXXXXX"
+
+# Plugins
+plugins:
+  - jekyll-sitemap
+  - jekyll-seo-tag
+  - jekyll-feed

@@ -1,0 +1,45 @@
+{
+  "name": "new-life-juice",
+  "version": "1.0.0",
+  "description": "Premium fresh juice delivery website built with vanilla HTML, CSS, and JavaScript",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "serve": "python3 -m http.server 8000",
+    "build": "echo 'Static site - no build process required'",
+    "test": "echo 'Tests can be added here'",
+    "deploy": "echo 'Push to main branch to deploy via GitHub Pages'",
+    "optimize-images": "echo 'Use imageoptim or similar tools to optimize images'",
+    "validate-html": "echo 'Use HTML validator to check markup'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/NewLifeJuice.git"
+  },
+  "keywords": [
+    "juice",
+    "health",
+    "organic",
+    "fresh",
+    "delivery",
+    "landing-page",
+    "github-pages",
+    "formspree"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yourusername/NewLifeJuice/issues"
+  },
+  "homepage": "https://yourusername.github.io/NewLifeJuice",
+  "devDependencies": {},
+  "dependencies": {},
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
