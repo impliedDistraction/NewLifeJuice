@@ -6,21 +6,33 @@ Your admin panel now includes AI-powered writing assistance! Here's how to set i
 
 ### **Step 1: Deploy the AI Service (5 minutes)**
 
-1. **Install Vercel CLI**:
+#### **Option A: Install Vercel CLI (Recommended)**
+1. **Install Vercel CLI without sudo**:
    ```bash
-   npm install -g vercel
+   npx vercel
+   ```
+   *OR if you prefer global install:*
+   ```bash
+   sudo npm install -g vercel
    ```
 
 2. **Deploy from your project directory**:
    ```bash
-   cd /path/to/NewLifeJuice
+   cd /home/josh/projects/NewLifeJuice
    vercel
    ```
 
 3. **Follow the prompts**:
-   - Login/create Vercel account
+   - Login with GitHub account (recommended)
    - Link to existing project or create new one
    - Deploy automatically
+
+#### **Option B: Deploy via GitHub Integration (Easier)**
+1. **Push your code to GitHub** (if not already done)
+2. **Go to [vercel.com](https://vercel.com)**
+3. **Sign up/Login with GitHub**
+4. **Import your NewLifeJuice repository**
+5. **Deploy automatically** - Vercel detects and builds your project
 
 ### **Step 2: Set Environment Variables**
 
