@@ -217,6 +217,202 @@
             margin: 2rem 0 1rem 0;
             padding-top: 1rem;
         }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            backdrop-filter: blur(3px);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #000;
+        }
+
+        /* Preview Styles */
+        .preview-container {
+            border: 2px solid var(--primary-green);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .preview-toggle {
+            background: var(--accent-orange);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: auto;
+        }
+
+        .preview-content {
+            display: none;
+            margin-top: 1rem;
+        }
+
+        .preview-content.active {
+            display: block;
+        }
+
+        /* Rich Text Editor Styles */
+        .rich-text-toolbar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background: #f8f9fa;
+            border-radius: 6px 6px 0 0;
+            border: 1px solid #ddd;
+            border-bottom: none;
+        }
+
+        .rich-text-btn {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+
+        .rich-text-btn:hover {
+            background: #e9ecef;
+        }
+
+        .rich-text-btn.active {
+            background: var(--primary-green);
+            color: white;
+        }
+
+        .rich-text-input {
+            border-radius: 0 0 6px 6px !important;
+            border-top: none !important;
+            min-height: 80px;
+            font-family: inherit;
+        }
+
+        /* Image Upload Enhancement */
+        .image-upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            background: #fafafa;
+            transition: border-color 0.3s;
+            cursor: pointer;
+            margin-top: 0.5rem;
+        }
+
+        .image-upload-area:hover {
+            border-color: var(--primary-green);
+            background: #f0f8f0;
+        }
+
+        .image-upload-area.dragover {
+            border-color: var(--accent-orange);
+            background: #fff5f0;
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #6c757d;
+        }
+
+        .image-options {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .image-option {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        /* Add Product Button Enhancement */
+        .add-product-container {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            border: 2px dashed var(--primary-green);
+            margin-top: 1rem;
+        }
+
+        .add-product-btn {
+            background: linear-gradient(135deg, var(--primary-green) 0%, var(--secondary-green) 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .add-product-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -237,47 +433,78 @@
         </div>
 
         <div class="admin-section">
-            <h2>🏢 Business Information</h2>
+            <div class="preview-header">
+                <h2>🏢 Business Information</h2>
+                <button class="preview-toggle" onclick="togglePreview('business')">👀 Preview Navigation & Footer</button>
+            </div>
+            
+            <div class="preview-container">
+                <div id="business-preview" class="preview-content">
+                    <!-- Preview will be generated here -->
+                </div>
+            </div>
+
             <div class="form-row">
                 <div class="form-group">
                     <label for="business-name">Business Name</label>
-                    <input type="text" id="business-name" value="New Life Juice">
+                    <input type="text" id="business-name" value="New Life Juice" onchange="updatePreview('business')">
                 </div>
                 <div class="form-group">
                     <label for="business-tagline">Tagline</label>
-                    <input type="text" id="business-tagline" value="Premium Fresh Juice">
+                    <input type="text" id="business-tagline" value="Premium Fresh Juice" onchange="updatePreview('business')">
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label for="business-phone">Phone Number</label>
-                    <input type="tel" id="business-phone" value="(555) 123-JUICE">
+                    <input type="tel" id="business-phone" value="(555) 123-JUICE" onchange="updatePreview('business')">
                 </div>
                 <div class="form-group">
                     <label for="business-email">Email Address</label>
-                    <input type="email" id="business-email" value="orders@newlifejuice.com">
+                    <input type="email" id="business-email" value="orders@newlifejuice.com" onchange="updatePreview('business')">
                 </div>
             </div>
         </div>
 
         <div class="admin-section">
-            <h2>🎯 Hero Section</h2>
+            <div class="preview-header">
+                <h2>🎯 Hero Section</h2>
+                <button class="preview-toggle" onclick="togglePreview('hero')">👀 Preview Hero Section</button>
+            </div>
+            
+            <div class="preview-container">
+                <div id="hero-preview" class="preview-content">
+                    <!-- Preview will be generated here -->
+                </div>
+            </div>
+
             <div class="form-row">
                 <div class="form-group full-width">
                     <label for="hero-title">Main Headline</label>
-                    <input type="text" id="hero-title" value="Fresh. Natural. Life-Changing.">
+                    <div class="rich-text-toolbar">
+                        <button type="button" class="rich-text-btn" onclick="toggleRichText('hero-title', 'bold')"><b>B</b></button>
+                        <button type="button" class="rich-text-btn" onclick="toggleRichText('hero-title', 'italic')"><i>I</i></button>
+                        <button type="button" class="rich-text-btn" onclick="addSpan('hero-title', 'highlight')">🌟 Highlight</button>
+                        <button type="button" class="rich-text-btn" onclick="addSpan('hero-title', 'accent')">🎨 Accent</button>
+                    </div>
+                    <input type="text" id="hero-title" class="rich-text-input" value="Fresh. Natural. Life-Changing." onchange="updatePreview('hero')">
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group full-width">
                     <label for="hero-description">Description</label>
-                    <textarea id="hero-description" rows="3">Experience the power of premium fresh juices, crafted with the finest ingredients and delivered to your door. Transform your health, one sip at a time.</textarea>
+                    <div class="rich-text-toolbar">
+                        <button type="button" class="rich-text-btn" onclick="toggleRichText('hero-description', 'bold')"><b>B</b></button>
+                        <button type="button" class="rich-text-btn" onclick="toggleRichText('hero-description', 'italic')"><i>I</i></button>
+                        <button type="button" class="rich-text-btn" onclick="addSpan('hero-description', 'highlight')">🌟 Highlight</button>
+                    </div>
+                    <textarea id="hero-description" class="rich-text-input" rows="3" onchange="updatePreview('hero')">Experience the power of premium fresh juices, crafted with the finest ingredients and delivered to your door. Transform your health, one sip at a time.</textarea>
                 </div>
             </div>
             <div class="form-row">
                 <div class="form-group">
                     <label for="hero-button">Button Text</label>
-                    <input type="text" id="hero-button" value="Start Your Journey">
+                    <input type="text" id="hero-button" value="Start Your Journey" onchange="updatePreview('hero')">
                 </div>
                 <div class="form-group">
                     <label for="hero-image">Hero Image URL/Filename 
@@ -287,19 +514,34 @@
                             <br>• External: https://your-image-url.com/...
                         </span>
                     </label>
-                    <input type="text" id="hero-image" value="images/hero-juice.jpg">
+                    <input type="text" id="hero-image" value="images/hero-juice.jpg" onchange="updatePreview('hero')">
+                    <div class="image-upload-area" onclick="document.getElementById('hero-file-input').click()">
+                        <div class="upload-icon">📸</div>
+                        <p>Click to select image or drag & drop</p>
+                        <small>Recommended: 1200x800px, under 500KB</small>
+                    </div>
+                    <input type="file" id="hero-file-input" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'hero-image')">
                 </div>
             </div>
         </div>
 
         <div class="admin-section">
-            <h2>🥤 Products</h2>
+            <div class="preview-header">
+                <h2>🥤 Products</h2>
+                <button class="preview-toggle" onclick="togglePreview('products')">👀 Preview Products Section</button>
+            </div>
             <div class="help-text">
                 💡 <strong>Image Tips:</strong> Use Cloudinary, Imgur, or upload to GitHub's images/ folder. 
                 <br><strong>Seasonal Tip:</strong> Use the Active toggle to hide/show seasonal products instantly!
             </div>
+            
+            <div class="preview-container">
+                <div id="products-preview" class="preview-content">
+                    <!-- Preview will be generated here -->
+                </div>
+            </div>
+
             <div style="margin-bottom: 1rem;">
-                <button class="btn-admin" onclick="addProduct()">➕ Add New Product</button>
                 <button class="btn-admin" onclick="toggleAllProducts(true)" style="background: #28a745;">✅ Enable All</button>
                 <button class="btn-admin" onclick="toggleAllProducts(false)" style="background: #6c757d;">⏸️ Disable All</button>
                 <button class="btn-admin" onclick="saveTemplate()" style="background: #17a2b8;">💾 Save Template</button>
@@ -307,6 +549,13 @@
             </div>
             <div id="products-container">
                 <!-- Products will be dynamically added here -->
+            </div>
+            
+            <div class="add-product-container">
+                <div class="upload-icon">🥤</div>
+                <h3>Add New Product</h3>
+                <p>Create a new juice product with our enhanced dialog</p>
+                <button class="add-product-btn" onclick="openAddProductModal()">➕ Add New Product</button>
             </div>
         </div>
 
@@ -413,6 +662,83 @@ Cash at Pickup</textarea>
     </div>
 
     <a href="index.html" class="preview-button">👀 Preview Website</a>
+
+    <!-- Add Product Modal -->
+    <div id="addProductModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddProductModal()">&times;</span>
+            <h2>🥤 Add New Product</h2>
+            <p>Create a new juice product with all the details</p>
+            
+            <form id="new-product-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-product-id">Product ID (no spaces, lowercase)</label>
+                        <input type="text" id="new-product-id" placeholder="e.g., green-detox" required>
+                        <small>This will be used in URLs and filenames</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="new-product-name">Product Name</label>
+                        <input type="text" id="new-product-name" placeholder="e.g., Green Detox" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="new-product-price">Price ($)</label>
+                        <input type="number" id="new-product-price" step="0.01" min="0" value="18" required>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="new-product-active" checked> 
+                            Active (visible on website)
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label for="new-product-description">Description</label>
+                    <div class="rich-text-toolbar">
+                        <button type="button" class="rich-text-btn" onclick="toggleRichText('new-product-description', 'bold')"><b>B</b></button>
+                        <button type="button" class="rich-text-btn" onclick="toggleRichText('new-product-description', 'italic')"><i>I</i></button>
+                        <button type="button" class="rich-text-btn" onclick="addSpan('new-product-description', 'highlight')">🌟 Highlight</button>
+                        <button type="button" class="rich-text-btn" onclick="addSpan('new-product-description', 'accent')">🎨 Accent</button>
+                    </div>
+                    <textarea id="new-product-description" class="rich-text-input" rows="3" placeholder="Describe your juice and its benefits..." required></textarea>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label for="new-product-ingredients">Ingredients (comma-separated)</label>
+                    <input type="text" id="new-product-ingredients" placeholder="e.g., Kale, Spinach, Green Apple, Lemon" required>
+                </div>
+                
+                <div class="form-group full-width">
+                    <label for="new-product-image">Product Image</label>
+                    <div class="image-options">
+                        <div class="image-option">
+                            <label>Image URL/Filename</label>
+                            <input type="text" id="new-product-image" placeholder="images/my-juice.jpg">
+                        </div>
+                        <div class="image-option">
+                            <label>Or Upload Image</label>
+                            <div class="image-upload-area" onclick="document.getElementById('new-product-file-input').click()">
+                                <div class="upload-icon">📸</div>
+                                <p>Click to select image</p>
+                                <small>400x300px recommended</small>
+                            </div>
+                            <input type="file" id="new-product-file-input" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'new-product-image')">
+                        </div>
+                    </div>
+                    <div id="new-product-image-preview" style="margin-top: 1rem;"></div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #eee;">
+                    <button type="button" class="btn-admin" onclick="closeAddProductModal()" style="background: #6c757d; margin-right: 1rem;">Cancel</button>
+                    <button type="submit" class="btn-admin">🥤 Create Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script>
         // Security and Configuration
@@ -576,7 +902,7 @@ Enter token (or click Cancel to use manual method):`);
                         <h3>Product ${index + 1}</h3>
                         <div style="display: flex; gap: 1rem; align-items: center;">
                             <label class="toggle-switch">
-                                <input type="checkbox" ${product.active ? 'checked' : ''} onchange="toggleProduct(${index})">
+                                <input type="checkbox" ${product.active ? 'checked' : ''} onchange="toggleProduct(${index}); updatePreview('products')">
                                 <span class="slider"></span>
                             </label>
                             <span style="font-size: 0.9rem; color: #6c757d;">${product.active ? 'Active' : 'Hidden'}</span>
@@ -586,17 +912,17 @@ Enter token (or click Cancel to use manual method):`);
                     <div class="form-row">
                         <div class="form-group">
                             <label>Product ID (no spaces)</label>
-                            <input type="text" value="${product.id}" onchange="updateProduct(${index}, 'id', this.value)">
+                            <input type="text" value="${product.id}" onchange="updateProduct(${index}, 'id', this.value); updatePreview('products')">
                         </div>
                         <div class="form-group">
                             <label>Product Name</label>
-                            <input type="text" value="${product.name}" onchange="updateProduct(${index}, 'name', this.value)">
+                            <input type="text" value="${product.name}" onchange="updateProduct(${index}, 'name', this.value); updatePreview('products')">
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label>Price ($)</label>
-                            <input type="number" step="0.01" value="${product.price}" onchange="updateProduct(${index}, 'price', parseFloat(this.value))">
+                            <input type="number" step="0.01" value="${product.price}" onchange="updateProduct(${index}, 'price', parseFloat(this.value)); updatePreview('products')">
                         </div>
                         <div class="form-group">
                             <label>Image URL/Filename
@@ -605,7 +931,13 @@ Enter token (or click Cancel to use manual method):`);
                                     <br>• External: https://...
                                 </span>
                             </label>
-                            <input type="text" value="${product.image}" onchange="updateProduct(${index}, 'image', this.value)" onblur="renderProducts()">
+                            <input type="text" value="${product.image}" onchange="updateProduct(${index}, 'image', this.value); updatePreview('products')" onblur="renderProducts()">
+                            <div class="image-upload-area" onclick="document.getElementById('product-file-input-${index}').click()">
+                                <div class="upload-icon">📸</div>
+                                <p>Click to change image</p>
+                            </div>
+                            <input type="file" id="product-file-input-${index}" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'product-image-${index}')">
+                            <input type="hidden" id="product-image-${index}" value="${product.image}">
                             <div style="margin-top: 0.5rem;">
                                 ${product.image ? `<img src="${product.image}" alt="Preview" style="max-width: 100px; max-height: 75px; border-radius: 4px; object-fit: cover;" onerror="this.style.display='none'">` : ''}
                             </div>
@@ -614,13 +946,19 @@ Enter token (or click Cancel to use manual method):`);
                     <div class="form-row">
                         <div class="form-group full-width">
                             <label>Description</label>
-                            <textarea rows="2" onchange="updateProduct(${index}, 'description', this.value)">${product.description}</textarea>
+                            <div class="rich-text-toolbar">
+                                <button type="button" class="rich-text-btn" onclick="toggleRichText('product-desc-${index}', 'bold')"><b>B</b></button>
+                                <button type="button" class="rich-text-btn" onclick="toggleRichText('product-desc-${index}', 'italic')"><i>I</i></button>
+                                <button type="button" class="rich-text-btn" onclick="addSpan('product-desc-${index}', 'highlight')">🌟 Highlight</button>
+                                <button type="button" class="rich-text-btn" onclick="addSpan('product-desc-${index}', 'accent')">🎨 Accent</button>
+                            </div>
+                            <textarea id="product-desc-${index}" class="rich-text-input" rows="2" onchange="updateProduct(${index}, 'description', this.value); updatePreview('products')">${product.description}</textarea>
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group full-width">
                             <label>Ingredients (comma-separated)</label>
-                            <input type="text" value="${product.ingredients.join(', ')}" onchange="updateProduct(${index}, 'ingredients', this.value.split(',').map(i => i.trim()))">
+                            <input type="text" value="${product.ingredients.join(', ')}" onchange="updateProduct(${index}, 'ingredients', this.value.split(',').map(i => i.trim())); updatePreview('products')">
                         </div>
                     </div>
                 `;
@@ -674,12 +1012,312 @@ Enter token (or click Cancel to use manual method):`);
             };
             products.push(newProduct);
             renderProducts();
+            updatePreview('products');
         }
+
+        // Enhanced modal and preview functionality
+        function openAddProductModal() {
+            document.getElementById('addProductModal').style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeAddProductModal() {
+            document.getElementById('addProductModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            // Reset form
+            document.getElementById('new-product-form').reset();
+            document.getElementById('new-product-price').value = 18;
+            document.getElementById('new-product-active').checked = true;
+            document.getElementById('new-product-image-preview').innerHTML = '';
+        }
+
+        // Handle new product form submission
+        document.getElementById('new-product-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const newProduct = {
+                id: document.getElementById('new-product-id').value.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+                name: document.getElementById('new-product-name').value,
+                description: document.getElementById('new-product-description').value,
+                price: parseFloat(document.getElementById('new-product-price').value),
+                image: document.getElementById('new-product-image').value || `images/${document.getElementById('new-product-id').value.toLowerCase().replace(/[^a-z0-9]/g, '-')}.jpg`,
+                ingredients: document.getElementById('new-product-ingredients').value.split(',').map(i => i.trim()),
+                active: document.getElementById('new-product-active').checked
+            };
+            
+            products.push(newProduct);
+            renderProducts();
+            updatePreview('products');
+            closeAddProductModal();
+            
+            // Scroll to the new product
+            setTimeout(() => {
+                const productElements = document.querySelectorAll('.product-editor');
+                const lastProduct = productElements[productElements.length - 1];
+                if (lastProduct) {
+                    lastProduct.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+        });
+
+        // Preview functionality
+        function togglePreview(section) {
+            const preview = document.getElementById(`${section}-preview`);
+            const button = event.target;
+            
+            if (preview.classList.contains('active')) {
+                preview.classList.remove('active');
+                button.textContent = `👀 Preview ${section.charAt(0).toUpperCase() + section.slice(1)} Section`;
+            } else {
+                preview.classList.add('active');
+                button.textContent = `🙈 Hide Preview`;
+                updatePreview(section);
+            }
+        }
+
+        function updatePreview(section) {
+            const preview = document.getElementById(`${section}-preview`);
+            if (!preview || !preview.classList.contains('active')) return;
+            
+            let content = '';
+            
+            switch(section) {
+                case 'business':
+                    content = generateBusinessPreview();
+                    break;
+                case 'hero':
+                    content = generateHeroPreview();
+                    break;
+                case 'products':
+                    content = generateProductsPreview();
+                    break;
+            }
+            
+            preview.innerHTML = content;
+        }
+
+        function generateBusinessPreview() {
+            const name = document.getElementById('business-name').value;
+            const tagline = document.getElementById('business-tagline').value;
+            const phone = document.getElementById('business-phone').value;
+            const email = document.getElementById('business-email').value;
+            
+            return `
+                <h3>Navigation Preview</h3>
+                <div style="background: #4CAF50; color: white; padding: 1rem; border-radius: 6px; margin-bottom: 1rem;">
+                    <h2 style="margin: 0; font-size: 1.5rem;">${name}</h2>
+                    <p style="margin: 0; opacity: 0.9; font-size: 0.9rem;">${tagline}</p>
+                </div>
+                
+                <h3>Footer Preview</h3>
+                <div style="background: #2c3e50; color: white; padding: 1.5rem; border-radius: 6px;">
+                    <h3 style="margin: 0 0 0.5rem 0; color: #4CAF50;">${name}</h3>
+                    <p style="margin: 0.25rem 0; font-size: 0.9rem;">📧 Email: ${email}</p>
+                    <p style="margin: 0.25rem 0; font-size: 0.9rem;">📞 Phone: ${phone}</p>
+                </div>
+            `;
+        }
+
+        function generateHeroPreview() {
+            const title = document.getElementById('hero-title').value;
+            const description = document.getElementById('hero-description').value;
+            const buttonText = document.getElementById('hero-button').value;
+            const image = document.getElementById('hero-image').value;
+            
+            return `
+                <div style="background: linear-gradient(135deg, #4CAF50 0%, #2e7d32 100%); color: white; padding: 3rem 2rem; border-radius: 8px; text-align: center;">
+                    <h1 style="margin: 0 0 1rem 0; font-size: 2.5rem; font-weight: bold;">${processRichText(title)}</h1>
+                    <p style="margin: 0 0 2rem 0; font-size: 1.2rem; line-height: 1.5; opacity: 0.95;">${processRichText(description)}</p>
+                    <button style="background: #FF6B35; color: white; border: none; padding: 1rem 2rem; border-radius: 6px; font-size: 1.1rem; font-weight: 600; cursor: pointer;">${buttonText}</button>
+                    ${image ? `<div style="margin-top: 2rem;"><img src="${image}" alt="Hero" style="max-width: 200px; max-height: 150px; border-radius: 8px; object-fit: cover;" onerror="this.style.display='none'"></div>` : ''}
+                </div>
+            `;
+        }
+
+        function generateProductsPreview() {
+            const sectionTitle = document.getElementById('products-section-title').value;
+            const sectionDescription = document.getElementById('products-section-description').value;
+            const activeProducts = products.filter(p => p.active);
+            
+            let productsHtml = activeProducts.map(product => `
+                <div style="border: 1px solid #ddd; border-radius: 8px; padding: 1rem; text-align: center; background: white;">
+                    ${product.image ? `<img src="${product.image}" alt="${product.name}" style="width: 100%; max-width: 150px; height: 100px; object-fit: cover; border-radius: 6px; margin-bottom: 0.5rem;" onerror="this.style.display='none'">` : ''}
+                    <h4 style="margin: 0.5rem 0; color: #2c3e50;">${product.name}</h4>
+                    <p style="margin: 0.5rem 0; font-size: 0.9rem; color: #6c757d;">${processRichText(product.description)}</p>
+                    <p style="margin: 0.5rem 0; font-weight: bold; font-size: 1.2rem; color: #4CAF50;">$${product.price}</p>
+                </div>
+            `).join('');
+            
+            return `
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <h2 style="margin: 0 0 0.5rem 0; color: #2c3e50;">${sectionTitle}</h2>
+                    <p style="margin: 0; color: #6c757d;">${sectionDescription}</p>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    ${productsHtml}
+                </div>
+                ${activeProducts.length === 0 ? '<p style="text-align: center; color: #6c757d; font-style: italic;">No active products to display</p>' : ''}
+            `;
+        }
+
+        // Rich text functionality
+        function toggleRichText(inputId, type) {
+            const input = document.getElementById(inputId);
+            const selection = window.getSelection();
+            
+            if (input.tagName === 'TEXTAREA') {
+                const start = input.selectionStart;
+                const end = input.selectionEnd;
+                const selectedText = input.value.substring(start, end);
+                
+                if (selectedText) {
+                    let wrappedText = '';
+                    switch(type) {
+                        case 'bold':
+                            wrappedText = `<strong>${selectedText}</strong>`;
+                            break;
+                        case 'italic':
+                            wrappedText = `<em>${selectedText}</em>`;
+                            break;
+                    }
+                    
+                    input.value = input.value.substring(0, start) + wrappedText + input.value.substring(end);
+                    input.focus();
+                }
+            } else {
+                // For input fields
+                const start = input.selectionStart;
+                const end = input.selectionEnd;
+                const selectedText = input.value.substring(start, end);
+                
+                if (selectedText) {
+                    let wrappedText = '';
+                    switch(type) {
+                        case 'bold':
+                            wrappedText = `<strong>${selectedText}</strong>`;
+                            break;
+                        case 'italic':
+                            wrappedText = `<em>${selectedText}</em>`;
+                            break;
+                    }
+                    
+                    input.value = input.value.substring(0, start) + wrappedText + input.value.substring(end);
+                    input.focus();
+                }
+            }
+        }
+
+        function addSpan(inputId, className) {
+            const input = document.getElementById(inputId);
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            const selectedText = input.value.substring(start, end);
+            
+            if (selectedText) {
+                const wrappedText = `<span class="${className}">${selectedText}</span>`;
+                input.value = input.value.substring(0, start) + wrappedText + input.value.substring(end);
+                input.focus();
+            } else {
+                alert('Please select text first to apply formatting');
+            }
+        }
+
+        function processRichText(text) {
+            return text
+                .replace(/<strong>/g, '<strong style="font-weight: bold;">')
+                .replace(/<em>/g, '<em style="font-style: italic;">')
+                .replace(/<span class="highlight">/g, '<span style="background: #ffeb3b; padding: 0.2rem 0.4rem; border-radius: 3px;">')
+                .replace(/<span class="accent">/g, '<span style="color: #FF6B35; font-weight: bold;">');
+        }
+
+        // Image upload handling
+        function handleImageUpload(input, targetInputId) {
+            const file = input.files[0];
+            if (file) {
+                // Show file name in the target input
+                const targetInput = document.getElementById(targetInputId);
+                targetInput.value = `images/${file.name}`;
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const previewContainer = targetInputId.includes('new-product') 
+                        ? document.getElementById('new-product-image-preview')
+                        : targetInput.nextElementSibling;
+                    
+                    if (previewContainer) {
+                        previewContainer.innerHTML = `
+                            <div style="text-align: center;">
+                                <img src="${e.target.result}" style="max-width: 200px; max-height: 150px; border-radius: 6px; object-fit: cover; border: 1px solid #ddd;">
+                                <p style="margin: 0.5rem 0; font-size: 0.9rem; color: #6c757d;">📁 ${file.name} (${(file.size / 1024).toFixed(1)} KB)</p>
+                                <small style="color: #6c757d;">Remember to upload this image to your GitHub repository's images/ folder</small>
+                            </div>
+                        `;
+                    }
+                };
+                reader.readAsDataURL(file);
+                
+                // Show upload instructions
+                alert(`📸 Image selected: ${file.name}\n\n📋 Next steps:\n1. Upload this image to your GitHub repository's images/ folder\n2. Make sure the filename matches: images/${file.name}\n3. Save your changes to update the website`);
+            }
+        }
+
+        // Enhanced drag and drop for image upload areas
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadAreas = document.querySelectorAll('.image-upload-area');
+            
+            uploadAreas.forEach(area => {
+                area.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    this.classList.add('dragover');
+                });
+                
+                area.addEventListener('dragleave', function() {
+                    this.classList.remove('dragover');
+                });
+                
+                area.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    this.classList.remove('dragover');
+                    
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const file = files[0];
+                        if (file.type.startsWith('image/')) {
+                            // Find the associated file input
+                            const fileInput = this.nextElementSibling;
+                            if (fileInput && fileInput.type === 'file') {
+                                // Create a new FileList with the dropped file
+                                const dt = new DataTransfer();
+                                dt.items.add(file);
+                                fileInput.files = dt.files;
+                                
+                                // Trigger the change event
+                                const event = new Event('change', { bubbles: true });
+                                fileInput.dispatchEvent(event);
+                            }
+                        } else {
+                            alert('Please drop an image file');
+                        }
+                    }
+                });
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(event) {
+                const modal = document.getElementById('addProductModal');
+                if (event.target === modal) {
+                    closeAddProductModal();
+                }
+            });
+        });
 
         function deleteProduct(index) {
             if (confirm('Are you sure you want to delete this product?')) {
                 products.splice(index, 1);
                 renderProducts();
+                updatePreview('products');
             }
         }
 

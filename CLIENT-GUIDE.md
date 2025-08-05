@@ -9,13 +9,16 @@
 **For the easiest experience, use your built-in admin panel:**
 👉 **[Open Admin Panel](https://impliedDistraction.github.io/NewLifeJuice/admin.html)** 👈
 
-### **🚀 NEW: Instant Saving to GitHub!**
+### **🚀 NEW: Enhanced Admin Features!**
 1. Click the link above to open your admin panel
 2. Enter the admin password (provided separately)
 3. Enter your GitHub personal access token (one-time setup)
-4. Edit products, prices, and business information visually
-5. Click **"Save to GitHub (Instant)"** 
-6. Your website updates automatically within 1-2 minutes!
+4. **NEW:** Use rich text editing with highlights and formatting
+5. **NEW:** Preview how each section will look before saving
+6. **NEW:** Enhanced image upload with drag & drop
+7. **NEW:** Modal dialog for adding new products
+8. Click **"Save to GitHub (Instant)"** 
+9. Your website updates automatically within 1-2 minutes!
 
 ### **📋 Backup Method (Manual):**
 If instant saving doesn't work:

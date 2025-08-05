@@ -477,13 +477,50 @@ class NewLifeJuiceApp {
                     const headerHeight = document.querySelector('.header').offsetHeight;
                     const targetPosition = target.offsetTop - headerHeight - 20;
                     
-                    window.scrollTo({
-                        top: targetPosition,
-                        behavior: 'smooth'
-                    });
+                    // Enhanced smooth scrolling with better Firefox compatibility
+                    if ('scrollBehavior' in document.documentElement.style) {
+                        window.scrollTo({
+                            top: targetPosition,
+                            behavior: 'smooth'
+                        });
+                    } else {
+                        // Fallback for older browsers or Firefox issues
+                        this.smoothScrollTo(targetPosition, 800);
+                    }
                 }
             });
         });
+    }
+
+    // Smooth scroll fallback for better browser compatibility
+    smoothScrollTo(targetPosition, duration) {
+        const startPosition = window.pageYOffset;
+        const distance = targetPosition - startPosition;
+        let startTime = null;
+
+        function animation(currentTime) {
+            if (startTime === null) {
+                startTime = currentTime;
+            }
+            const timeElapsed = currentTime - startTime;
+            const run = this.easeInOutQuad(timeElapsed, startPosition, distance, duration);
+            window.scrollTo(0, run);
+            if (timeElapsed < duration) {
+                requestAnimationFrame(animation.bind(this));
+            }
+        }
+
+        requestAnimationFrame(animation.bind(this));
+    }
+
+    // Easing function for smooth animation
+    easeInOutQuad(t, b, c, d) {
+        t /= d / 2;
+        if (t < 1) {
+            return c / 2 * t * t + b;
+        }
+        t--;
+        return -c / 2 * (t * (t - 2) - 1) + b;
     }
 
     // Intersection Observer for animations
