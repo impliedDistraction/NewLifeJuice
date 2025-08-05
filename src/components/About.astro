@@ -1,0 +1,61 @@
+---
+const features = [
+    {
+        icon: "🌱",
+        title: "100% Organic",
+        description: "Sourced from certified organic farms with no pesticides or chemicals."
+    },
+    {
+        icon: "❄️", 
+        title: "Cold-Pressed Fresh",
+        description: "Made fresh daily using cold-press technology to preserve maximum nutrients."
+    },
+    {
+        icon: "🚚",
+        title: "Fast Delivery", 
+        description: "Delivered fresh to your door within 24 hours of pressing."
+    }
+];
+---
+
+<section id="about" class="py-16 md:py-24 bg-gradient-to-br from-green-50 to-blue-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <!-- Content -->
+            <div class="space-y-8">
+                <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900">
+                    Why Choose New Life Juice?
+                </h2>
+                
+                <div class="space-y-6">
+                    {features.map((feature) => (
+                        <div class="flex items-start space-x-4 p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
+                            <div class="text-3xl">{feature.icon}</div>
+                            <div class="space-y-2">
+                                <h3 class="text-xl font-semibold text-gray-900">
+                                    {feature.title}
+                                </h3>
+                                <p class="text-gray-600 leading-relaxed">
+                                    {feature.description}
+                                </p>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <!-- Image -->
+            <div class="flex justify-center lg:justify-end">
+                <div class="relative">
+                    <div class="w-80 h-80 md:w-96 md:h-96 rounded-2xl bg-gradient-to-br from-green-400 to-blue-500 opacity-20 absolute -top-4 -right-4"></div>
+                    <img 
+                        src="/images/about-us.jpg"
+                        alt="Fresh ingredients and juicing process"
+                        class="w-80 h-80 md:w-96 md:h-96 object-cover rounded-2xl shadow-2xl relative z-10"
+                        loading="lazy"
+                    >
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

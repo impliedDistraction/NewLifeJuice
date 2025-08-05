@@ -1,0 +1,89 @@
+---
+// This would normally fetch from an API or import from a JSON file
+const products = [
+    {
+        id: "green-detox",
+        name: "Green Detox",
+        description: "Kale, spinach, cucumber, green apple, and lemon. Your daily dose of green goodness.",
+        price: 18,
+        image: "/images/green-detox.jpg"
+    },
+    {
+        id: "citrus-burst",
+        name: "Citrus Burst", 
+        description: "Orange, grapefruit, lime, and ginger. Vitamin C powerhouse to boost your immunity.",
+        price: 18,
+        image: "/images/citrus-burst.jpg"
+    },
+    {
+        id: "berry-antioxidant",
+        name: "Berry Antioxidant",
+        description: "Blueberries, strawberries, raspberries, and pomegranate. Packed with antioxidants.",
+        price: 18,
+        image: "/images/berry-antioxidant.jpg"
+    },
+    {
+        id: "tropical-paradise",
+        name: "Tropical Paradise",
+        description: "Pineapple, mango, coconut water, and passion fruit. Escape to the tropics.",
+        price: 18,
+        image: "/images/tropical-paradise.jpg"
+    },
+    {
+        id: "root-vegetable",
+        name: "Root Vegetable",
+        description: "Carrot, beet, ginger, and turmeric. Earthy flavors with powerful nutrients.",
+        price: 18,
+        image: "/images/root-vegetable.jpg"
+    }
+];
+---
+
+<section id="products" class="py-16 md:py-24 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Section Header -->
+        <div class="text-center mb-16">
+            <h2 class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+                Our Premium Collection
+            </h2>
+            <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
+                Five carefully crafted blends, each designed to nourish your body and energize your life.
+            </p>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {products.map((product) => (
+                <div class="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden transform hover:-translate-y-2">
+                    <!-- Product Image -->
+                    <div class="aspect-w-16 aspect-h-10 overflow-hidden">
+                        <img 
+                            src={product.image}
+                            alt={product.name + " Juice"}
+                            class="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+                            loading="lazy"
+                        >
+                    </div>
+                    
+                    <!-- Product Info -->
+                    <div class="p-6 space-y-4">
+                        <h3 class="text-xl font-bold text-gray-900 group-hover:text-green-600 transition-colors duration-200">
+                            {product.name}
+                        </h3>
+                        <p class="text-gray-600 leading-relaxed">
+                            {product.description}
+                        </p>
+                        <div class="flex justify-between items-center pt-2">
+                            <div class="text-2xl font-bold text-green-600">
+                                ${product.price}
+                            </div>
+                            <button class="bg-green-100 text-green-700 px-4 py-2 rounded-full hover:bg-green-600 hover:text-white transition-all duration-200 font-medium">
+                                Add to Order
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    </div>
+</section>

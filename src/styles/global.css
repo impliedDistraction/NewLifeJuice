@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+/* Custom font family */
+.font-poppins {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}

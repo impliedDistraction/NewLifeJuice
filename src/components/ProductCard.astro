@@ -1,0 +1,499 @@
+---
+// Dynamic Product Card Component
+// AI-enhanced with real-time editing capabilities
+
+export interface Product {
+    id: string;
+    name: string;
+    description: string;
+    price: number;
+    image: string;
+    ingredients?: string[];
+    benefits?: string[];
+    nutritionalInfo?: {
+        calories?: number;
+        protein?: number;
+        carbs?: number;
+        fiber?: number;
+        sugar?: number;
+    };
+    featured?: boolean;
+    inStock?: boolean;
+    category?: string;
+}
+
+export interface ProductCardProps {
+    product: Product;
+    editable?: boolean;
+    clientTheme?: 'green' | 'blue' | 'purple' | 'orange' | 'custom';
+    layout?: 'card' | 'horizontal' | 'minimal';
+    showNutrition?: boolean;
+    showIngredients?: boolean;
+    aiOptimized?: boolean;
+}
+
+const {
+    product,
+    editable = false,
+    clientTheme = 'green',
+    layout = 'card',
+    showNutrition = true,
+    showIngredients = true,
+    aiOptimized = false
+} = Astro.props as ProductCardProps;
+
+// Theme configurations
+const themeClasses = {
+    green: {
+        primary: 'text-green-600',
+        bg: 'bg-green-50',
+        border: 'border-green-200',
+        button: 'bg-green-600 hover:bg-green-700',
+        accent: 'text-green-800',
+        badge: 'bg-green-100 text-green-800'
+    },
+    blue: {
+        primary: 'text-blue-600',
+        bg: 'bg-blue-50',
+        border: 'border-blue-200',
+        button: 'bg-blue-600 hover:bg-blue-700',
+        accent: 'text-blue-800',
+        badge: 'bg-blue-100 text-blue-800'
+    },
+    purple: {
+        primary: 'text-purple-600',
+        bg: 'bg-purple-50',
+        border: 'border-purple-200',
+        button: 'bg-purple-600 hover:bg-purple-700',
+        accent: 'text-purple-800',
+        badge: 'bg-purple-100 text-purple-800'
+    },
+    orange: {
+        primary: 'text-orange-600',
+        bg: 'bg-orange-50',
+        border: 'border-orange-200',
+        button: 'bg-orange-600 hover:bg-orange-700',
+        accent: 'text-orange-800',
+        badge: 'bg-orange-100 text-orange-800'
+    },
+    custom: {
+        primary: 'text-gray-600',
+        bg: 'bg-gray-50',
+        border: 'border-gray-200',
+        button: 'bg-gray-600 hover:bg-gray-700',
+        accent: 'text-gray-800',
+        badge: 'bg-gray-100 text-gray-800'
+    }
+};
+
+const theme = themeClasses[clientTheme];
+
+// Layout classes
+const layoutClasses = {
+    card: 'flex-col',
+    horizontal: 'flex-row',
+    minimal: 'flex-col minimal'
+};
+---
+
+<div 
+    class={`product-card relative bg-white rounded-lg shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl ${layout === 'horizontal' ? 'flex' : 'flex flex-col'} ${layoutClasses[layout]}`}
+    data-product-id={product.id}
+    data-editable={editable}
+>
+    <!-- Featured Badge -->
+    {product.featured && (
+        <div class="absolute top-3 left-3 z-10">
+            <span class={`${theme.badge} px-3 py-1 rounded-full text-xs font-bold shadow-sm`}>
+                ⭐ Featured
+            </span>
+        </div>
+    )}
+
+    <!-- Stock Status -->
+    <div class="absolute top-3 right-3 z-10">
+        <span class={`px-3 py-1 rounded-full text-xs font-medium shadow-sm ${
+            product.inStock 
+                ? 'bg-green-100 text-green-800' 
+                : 'bg-red-100 text-red-800'
+        }`}>
+            {product.inStock ? '✓ In Stock' : '✗ Out of Stock'}
+        </span>
+    </div>
+
+    <!-- Edit Button (Admin Only) -->
+    {editable && (
+        <div class="absolute top-3 left-1/2 transform -translate-x-1/2 z-10">
+            <button 
+                class={`${theme.button} text-white px-3 py-1 rounded text-xs hover:shadow-lg transition-all opacity-0 group-hover:opacity-100`}
+                onclick={`editProduct('${product.id}')`}
+            >
+                <i class="fas fa-edit mr-1"></i>
+                Edit
+            </button>
+        </div>
+    )}
+
+    <!-- Product Image -->
+    <div class={`${layout === 'horizontal' ? 'w-1/3' : 'w-full'} ${layout === 'minimal' ? 'h-40' : 'h-64'} relative overflow-hidden group`}>
+        <img 
+            src={product.image} 
+            alt={product.name}
+            class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+        >
+        <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+    </div>
+
+    <!-- Product Content -->
+    <div class={`${layout === 'horizontal' ? 'w-2/3' : 'w-full'} p-6 flex flex-col flex-grow`}>
+        <!-- Product Name & Price -->
+        <div class="flex justify-between items-start mb-3">
+            <h3 class={`${theme.accent} text-xl font-bold leading-tight`}>
+                {product.name}
+            </h3>
+            <span class={`${theme.primary} text-2xl font-bold ml-4`}>
+                ${product.price.toFixed(2)}
+            </span>
+        </div>
+
+        <!-- Description -->
+        <p class="text-gray-600 text-sm leading-relaxed mb-4 flex-grow">
+            {product.description}
+        </p>
+
+        <!-- Benefits -->
+        {product.benefits && product.benefits.length > 0 && (
+            <div class="mb-4">
+                <h4 class="text-sm font-semibold text-gray-800 mb-2">Benefits:</h4>
+                <div class="flex flex-wrap gap-2">
+                    {product.benefits.map(benefit => (
+                        <span class={`${theme.badge} px-2 py-1 rounded-full text-xs`}>
+                            {benefit}
+                        </span>
+                    ))}
+                </div>
+            </div>
+        )}
+
+        <!-- Ingredients -->
+        {showIngredients && product.ingredients && product.ingredients.length > 0 && (
+            <div class="mb-4">
+                <h4 class="text-sm font-semibold text-gray-800 mb-2">Ingredients:</h4>
+                <p class="text-xs text-gray-600">
+                    {product.ingredients.join(' • ')}
+                </p>
+            </div>
+        )}
+
+        <!-- Nutritional Info -->
+        {showNutrition && product.nutritionalInfo && (
+            <div class="mb-4 p-3 bg-gray-50 rounded-lg">
+                <h4 class="text-sm font-semibold text-gray-800 mb-2">Nutrition Facts:</h4>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    {product.nutritionalInfo.calories && (
+                        <div class="flex justify-between">
+                            <span>Calories:</span>
+                            <span class="font-medium">{product.nutritionalInfo.calories}</span>
+                        </div>
+                    )}
+                    {product.nutritionalInfo.protein && (
+                        <div class="flex justify-between">
+                            <span>Protein:</span>
+                            <span class="font-medium">{product.nutritionalInfo.protein}g</span>
+                        </div>
+                    )}
+                    {product.nutritionalInfo.carbs && (
+                        <div class="flex justify-between">
+                            <span>Carbs:</span>
+                            <span class="font-medium">{product.nutritionalInfo.carbs}g</span>
+                        </div>
+                    )}
+                    {product.nutritionalInfo.fiber && (
+                        <div class="flex justify-between">
+                            <span>Fiber:</span>
+                            <span class="font-medium">{product.nutritionalInfo.fiber}g</span>
+                        </div>
+                    )}
+                </div>
+            </div>
+        )}
+
+        <!-- Action Buttons -->
+        <div class="flex space-x-3 mt-auto">
+            <button 
+                class={`${theme.button} text-white px-6 py-2 rounded-lg font-semibold transition-all flex-grow ${
+                    !product.inStock ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg'
+                }`}
+                onclick={`addToCart('${product.id}')`}
+                disabled={!product.inStock}
+            >
+                <i class="fas fa-shopping-cart mr-2"></i>
+                {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+            </button>
+            
+            <button 
+                class={`border ${theme.border} ${theme.primary} px-4 py-2 rounded-lg hover:${theme.bg} transition-colors`}
+                onclick={`viewProductDetails('${product.id}')`}
+            >
+                <i class="fas fa-info-circle"></i>
+            </button>
+        </div>
+
+        <!-- AI Optimization Badge -->
+        {aiOptimized && (
+            <div class="mt-3 text-center">
+                <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
+                    <i class="fas fa-robot mr-1"></i>
+                    AI Optimized
+                </span>
+            </div>
+        )}
+    </div>
+</div>
+
+<!-- Product Edit Modal -->
+{editable && (
+    <div id={`product-modal-${product.id}`} class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900">Edit Product: {product.name}</h3>
+                <button 
+                    onclick={`closeProductModal('${product.id}')`}
+                    class="text-gray-500 hover:text-gray-700 text-xl"
+                >
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id={`product-form-${product.id}`} class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Basic Info -->
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-gray-800">Basic Information</h4>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Product Name</label>
+                        <input 
+                            type="text" 
+                            name="name"
+                            value={product.name}
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Price ($)</label>
+                        <input 
+                            type="number" 
+                            name="price"
+                            value={product.price}
+                            step="0.01"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <textarea 
+                            name="description"
+                            rows="4"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >{product.description}</textarea>
+                    </div>
+
+                    <div class="flex items-center space-x-4">
+                        <label class="flex items-center">
+                            <input 
+                                type="checkbox" 
+                                name="featured"
+                                checked={product.featured}
+                                class="mr-2"
+                            >
+                            Featured Product
+                        </label>
+                        
+                        <label class="flex items-center">
+                            <input 
+                                type="checkbox" 
+                                name="inStock"
+                                checked={product.inStock}
+                                class="mr-2"
+                            >
+                            In Stock
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Advanced Info -->
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-gray-800">Additional Details</h4>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Ingredients (comma-separated)</label>
+                        <textarea 
+                            name="ingredients"
+                            rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >{product.ingredients?.join(', ')}</textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Benefits (comma-separated)</label>
+                        <textarea 
+                            name="benefits"
+                            rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >{product.benefits?.join(', ')}</textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Calories</label>
+                            <input 
+                                type="number" 
+                                name="calories"
+                                value={product.nutritionalInfo?.calories || ''}
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            >
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Protein (g)</label>
+                            <input 
+                                type="number" 
+                                name="protein"
+                                value={product.nutritionalInfo?.protein || ''}
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="md:col-span-2 flex justify-between items-center pt-6 border-t">
+                    <div class="space-x-3">
+                        <button 
+                            type="button"
+                            onclick={`generateProductAI('${product.id}')`}
+                            class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition-colors"
+                        >
+                            <i class="fas fa-magic mr-2"></i>
+                            Enhance with AI
+                        </button>
+                        
+                        <button 
+                            type="button"
+                            onclick={`optimizeForSEO('${product.id}')`}
+                            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                        >
+                            <i class="fas fa-search mr-2"></i>
+                            SEO Optimize
+                        </button>
+                    </div>
+                    
+                    <div class="space-x-3">
+                        <button 
+                            type="button"
+                            onclick={`closeProductModal('${product.id}')`}
+                            class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        
+                        <button 
+                            type="submit"
+                            class="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition-colors"
+                        >
+                            Save Product
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+)}
+
+<style>
+    .product-card {
+        transition: all 0.3s ease;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-4px);
+    }
+    
+    .product-card.minimal {
+        max-width: 300px;
+    }
+    
+    [data-editable="true"]:hover {
+        box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+    }
+    
+    .group:hover .group-hover\:opacity-100 {
+        opacity: 1;
+    }
+</style>
+
+<script define:vars={{ product, theme }}>
+    // Client-side product management functions
+    window.editProduct = function(id) {
+        document.getElementById(`product-modal-${id}`).classList.remove('hidden');
+    };
+    
+    window.closeProductModal = function(id) {
+        document.getElementById(`product-modal-${id}`).classList.add('hidden');
+    };
+    
+    window.addToCart = function(id) {
+        // TODO: Implement cart functionality
+        console.log('Adding product to cart:', id);
+        alert('Product added to cart! (Feature coming soon)');
+    };
+    
+    window.viewProductDetails = function(id) {
+        // TODO: Implement product detail view
+        console.log('Viewing product details:', id);
+    };
+    
+    window.generateProductAI = async function(id) {
+        const form = document.getElementById(`product-form-${id}`);
+        const nameInput = form.querySelector('[name="name"]');
+        const descriptionTextarea = form.querySelector('[name="description"]');
+        const ingredientsTextarea = form.querySelector('[name="ingredients"]');
+        
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...';
+        button.disabled = true;
+        
+        try {
+            // Generate enhanced description
+            const response = await fetch('/api/ai-assistant', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: `Create compelling marketing copy for "${nameInput.value}" juice with ingredients: ${ingredientsTextarea.value}`,
+                    type: 'product-description',
+                    adminPassword: localStorage.getItem('adminPassword')
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                descriptionTextarea.value = data.suggestion;
+            }
+        } catch (error) {
+            console.error('AI generation error:', error);
+            alert('Error generating content. Please try again.');
+        } finally {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    };
+    
+    window.optimizeForSEO = function(id) {
+        // TODO: Implement SEO optimization
+        console.log('Optimizing product for SEO:', id);
+        alert('SEO optimization feature coming soon!');
+    };
+</script>

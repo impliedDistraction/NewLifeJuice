@@ -1,49 +1,17 @@
 {
-  "name": "new-life-juice",
-  "version": "1.0.0",
-  "description": "Premium fresh juice delivery website built with vanilla HTML, CSS, and JavaScript",
-  "main": "index.html",
+  "name": "astro-site",
+  "type": "module",
+  "version": "0.0.1",
   "scripts": {
-    "start": "python3 -m http.server 8000",
-    "serve": "python3 -m http.server 8000",
-    "build": "echo 'Static site - no build process required'",
-    "test": "echo 'Tests can be added here'",
-    "deploy": "echo 'Push to main branch to deploy via GitHub Pages'",
-    "deploy-ai": "vercel --prod",
-    "deploy-ai-dev": "vercel",
-    "optimize-images": "echo 'Use imageoptim or similar tools to optimize images'",
-    "validate-html": "echo 'Use HTML validator to check markup'"
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/impliedDistraction/NewLifeJuice.git"
-  },
-  "keywords": [
-    "juice",
-    "health",
-    "organic",
-    "fresh",
-    "delivery",
-    "landing-page",
-    "github-pages",
-    "formspree"
-  ],
-  "author": "Your Name",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/impliedDistraction/NewLifeJuice/issues"
-  },
-  "homepage": "https://impliedDistraction.github.io/NewLifeJuice",
-  "devDependencies": {
-    "vercel": "^32.0.0"
-  },
-  "dependencies": {},
-  "browserslist": [
-    "> 1%",
-    "last 2 versions",
-    "not dead"
-  ],
-  "engines": {
-    "node": ">=14.0.0"
+  "dependencies": {
+    "@astrojs/vercel": "^8.2.5",
+    "@tailwindcss/vite": "^4.1.11",
+    "astro": "^5.12.8",
+    "tailwindcss": "^4.1.11"
   }
 }

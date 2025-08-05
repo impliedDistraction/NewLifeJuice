@@ -1,0 +1,279 @@
+---
+// Reusable AI-Powered Content Block Component
+// Multi-client ready with customizable styling and behavior
+
+export interface ContentBlockProps {
+    title?: string;
+    content?: string;
+    type?: 'hero' | 'feature' | 'testimonial' | 'cta' | 'info';
+    aiGenerated?: boolean;
+    clientTheme?: 'green' | 'blue' | 'purple' | 'orange' | 'custom';
+    editable?: boolean;
+    blockId?: string;
+}
+
+const {
+    title = '',
+    content = '',
+    type = 'info',
+    aiGenerated = false,
+    clientTheme = 'green',
+    editable = false,
+    blockId = ''
+} = Astro.props as ContentBlockProps;
+
+// Theme configurations for different clients
+const themeClasses = {
+    green: {
+        primary: 'text-green-600',
+        bg: 'bg-green-50',
+        border: 'border-green-200',
+        button: 'bg-green-600 hover:bg-green-700',
+        accent: 'text-green-800'
+    },
+    blue: {
+        primary: 'text-blue-600',
+        bg: 'bg-blue-50',
+        border: 'border-blue-200',
+        button: 'bg-blue-600 hover:bg-blue-700',
+        accent: 'text-blue-800'
+    },
+    purple: {
+        primary: 'text-purple-600',
+        bg: 'bg-purple-50',
+        border: 'border-purple-200',
+        button: 'bg-purple-600 hover:bg-purple-700',
+        accent: 'text-purple-800'
+    },
+    orange: {
+        primary: 'text-orange-600',
+        bg: 'bg-orange-50',
+        border: 'border-orange-200',
+        button: 'bg-orange-600 hover:bg-orange-700',
+        accent: 'text-orange-800'
+    },
+    custom: {
+        primary: 'text-gray-600',
+        bg: 'bg-gray-50',
+        border: 'border-gray-200',
+        button: 'bg-gray-600 hover:bg-gray-700',
+        accent: 'text-gray-800'
+    }
+};
+
+const theme = themeClasses[clientTheme];
+
+// Type-specific styling
+const typeStyles = {
+    hero: 'text-center py-16 px-8',
+    feature: 'py-8 px-6',
+    testimonial: 'py-6 px-8 italic',
+    cta: 'text-center py-12 px-8',
+    info: 'py-6 px-6'
+};
+---
+
+<div 
+    class={`content-block relative ${typeStyles[type]} ${theme.bg} ${theme.border} border rounded-lg`}
+    data-block-id={blockId}
+    data-editable={editable}
+>
+    <!-- AI Generated Badge -->
+    {aiGenerated && (
+        <div class="absolute top-2 right-2">
+            <span class={`${theme.primary} bg-white px-2 py-1 rounded-full text-xs font-medium shadow-sm border ${theme.border}`}>
+                <i class="fas fa-robot mr-1"></i>
+                AI Generated
+            </span>
+        </div>
+    )}
+
+    <!-- Edit Button (Admin Only) -->
+    {editable && (
+        <div class="absolute top-2 left-2">
+            <button 
+                class={`${theme.button} text-white px-3 py-1 rounded text-xs hover:shadow-lg transition-all`}
+                onclick={`editContentBlock('${blockId}')`}
+            >
+                <i class="fas fa-edit mr-1"></i>
+                Edit
+            </button>
+        </div>
+    )}
+
+    <!-- Content -->
+    <div class="content-wrapper">
+        {title && (
+            <h2 class={`${theme.accent} font-bold mb-4 ${type === 'hero' ? 'text-4xl' : type === 'cta' ? 'text-3xl' : 'text-2xl'}`}>
+                {title}
+            </h2>
+        )}
+        
+        {content && (
+            <div class={`text-gray-700 ${type === 'hero' ? 'text-lg' : 'text-base'} leading-relaxed`}>
+                <p set:html={content}></p>
+            </div>
+        )}
+
+        <!-- Type-specific elements -->
+        {type === 'cta' && (
+            <div class="mt-6">
+                <button class={`${theme.button} text-white px-8 py-3 rounded-lg font-semibold transition-colors shadow-lg`}>
+                    Get Started
+                </button>
+            </div>
+        )}
+
+        <!-- Slot for additional content -->
+        <slot />
+    </div>
+</div>
+
+<!-- Edit Modal (shown when editing) -->
+<div id={`edit-modal-${blockId}`} class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+    <div class="bg-white p-6 rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold text-gray-900">Edit Content Block</h3>
+            <button 
+                onclick={`closeEditModal('${blockId}')`}
+                class="text-gray-500 hover:text-gray-700"
+            >
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form id={`edit-form-${blockId}`} class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Title</label>
+                <input 
+                    type="text" 
+                    name="title"
+                    value={title}
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Content</label>
+                <textarea 
+                    name="content"
+                    rows="6"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >{content}</textarea>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <button 
+                    type="button"
+                    onclick={`generateAIContent('${blockId}', '${type}')`}
+                    class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 transition-colors"
+                >
+                    <i class="fas fa-magic mr-2"></i>
+                    Generate with AI
+                </button>
+                
+                <button 
+                    type="submit"
+                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                >
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .content-block {
+        position: relative;
+        transition: all 0.3s ease;
+    }
+    
+    .content-block:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    [data-editable="true"]:hover {
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    }
+</style>
+
+<script define:vars={{ blockId, theme }}>
+    // Client-side functionality for content editing
+    window.editContentBlock = function(id) {
+        document.getElementById(`edit-modal-${id}`).classList.remove('hidden');
+    };
+    
+    window.closeEditModal = function(id) {
+        document.getElementById(`edit-modal-${id}`).classList.add('hidden');
+    };
+    
+    window.generateAIContent = async function(id, type) {
+        const form = document.getElementById(`edit-form-${id}`);
+        const titleInput = form.querySelector('[name="title"]');
+        const contentTextarea = form.querySelector('[name="content"]');
+        
+        // Show loading state
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Generating...';
+        button.disabled = true;
+        
+        try {
+            const response = await fetch('/api/ai-assistant', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    prompt: `Generate ${type} content for: ${titleInput.value || 'untitled section'}`,
+                    type: type === 'hero' ? 'marketing-copy' : 'product-description',
+                    adminPassword: localStorage.getItem('adminPassword')
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                contentTextarea.value = data.suggestion;
+                // Mark as AI generated
+                const badge = form.closest('.content-block').querySelector('.ai-badge');
+                if (badge) badge.classList.remove('hidden');
+            } else {
+                alert('Error generating content: ' + data.error);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error generating content. Please try again.');
+        } finally {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    };
+    
+    // Handle form submission
+    document.getElementById(`edit-form-${blockId}`)?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const updatedData = {
+            title: formData.get('title'),
+            content: formData.get('content')
+        };
+        
+        // Update the content block
+        const block = document.querySelector(`[data-block-id="${blockId}"]`);
+        const titleElement = block.querySelector('h2');
+        const contentElement = block.querySelector('.content-wrapper p');
+        
+        if (titleElement) titleElement.textContent = updatedData.title;
+        if (contentElement) contentElement.innerHTML = updatedData.content;
+        
+        // Close modal
+        closeEditModal(blockId);
+        
+        // TODO: Save to backend
+        console.log('Content updated:', updatedData);
+    });
+</script>
