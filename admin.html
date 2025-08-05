@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Life Juice - Admin Panel</title>
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        .admin-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+        .admin-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .admin-section {
+            background: white;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .product-editor {
+            border: 1px solid #e9ecef;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        .form-group label {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+        }
+        .form-group input,
+        .form-group textarea {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--primary-green);
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        .btn-admin {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.3s;
+        }
+        .btn-admin:hover {
+            background: var(--secondary-green);
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .config-display {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+        }
+        .help-text {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-bottom: 1rem;
+        }
+        .preview-button {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--accent-orange);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+        .preview-button:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1>🥤 New Life Juice Admin Panel</h1>
+            <p>Manage your products, pricing, and website content</p>
+        </div>
+
+        <div class="admin-section">
+            <h2>📋 Quick Instructions</h2>
+            <div class="help-text">
+                1. Edit your products, prices, and business information below<br>
+                2. Click "Generate Config" to update your website<br>
+                3. Copy the generated config and paste it into your <code>config.json</code> file on GitHub<br>
+                4. Commit the changes and your website will update automatically!
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h2>🏢 Business Information</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="business-name">Business Name</label>
+                    <input type="text" id="business-name" value="New Life Juice">
+                </div>
+                <div class="form-group">
+                    <label for="business-tagline">Tagline</label>
+                    <input type="text" id="business-tagline" value="Premium Fresh Juice">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="business-phone">Phone Number</label>
+                    <input type="tel" id="business-phone" value="(555) 123-JUICE">
+                </div>
+                <div class="form-group">
+                    <label for="business-email">Email Address</label>
+                    <input type="email" id="business-email" value="orders@newlifejuice.com">
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h2>🎯 Hero Section</h2>
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label for="hero-title">Main Headline</label>
+                    <input type="text" id="hero-title" value="Fresh. Natural. Life-Changing.">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label for="hero-description">Description</label>
+                    <textarea id="hero-description" rows="3">Experience the power of premium fresh juices, crafted with the finest ingredients and delivered to your door. Transform your health, one sip at a time.</textarea>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="hero-button">Button Text</label>
+                    <input type="text" id="hero-button" value="Start Your Journey">
+                </div>
+                <div class="form-group">
+                    <label for="hero-image">Hero Image Filename</label>
+                    <input type="text" id="hero-image" value="images/hero-juice.jpg">
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h2>🥤 Products</h2>
+            <div id="products-container">
+                <!-- Products will be dynamically added here -->
+            </div>
+            <button class="btn-admin" onclick="addProduct()">➕ Add New Product</button>
+        </div>
+
+        <div class="admin-section">
+            <h2>💳 Payment Information</h2>
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label for="payment-message">Contact Message</label>
+                    <textarea id="payment-message" rows="2">We'll contact you within 24 hours to arrange payment and confirm your delivery schedule. We accept:</textarea>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="payment-methods">Payment Methods (one per line)</label>
+                <textarea id="payment-methods" rows="4">Credit/Debit Cards
+PayPal
+Venmo
+Cash on Delivery</textarea>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h2>📄 Generated Configuration</h2>
+            <div class="help-text">
+                Copy this entire text and paste it into your <code>config.json</code> file on GitHub:
+            </div>
+            <div id="config-output" class="config-display">
+                Click "Generate Config" to see the configuration...
+            </div>
+            <button class="btn-admin" onclick="generateConfig()">🔄 Generate Config</button>
+            <button class="btn-admin" onclick="copyConfig()">📋 Copy to Clipboard</button>
+        </div>
+    </div>
+
+    <a href="index.html" class="preview-button">👀 Preview Website</a>
+
+    <script>
+        let products = [
+            {
+                id: "green-detox",
+                name: "Green Detox",
+                description: "Kale, spinach, cucumber, green apple, and lemon. Your daily dose of green goodness.",
+                price: 18,
+                image: "images/green-detox.jpg",
+                ingredients: ["Kale", "Spinach", "Cucumber", "Green Apple", "Lemon"],
+                active: true
+            },
+            {
+                id: "citrus-burst",
+                name: "Citrus Burst",
+                description: "Orange, grapefruit, lime, and ginger. Vitamin C powerhouse to boost your immunity.",
+                price: 18,
+                image: "images/citrus-burst.jpg",
+                ingredients: ["Orange", "Grapefruit", "Lime", "Ginger"],
+                active: true
+            },
+            {
+                id: "berry-antioxidant",
+                name: "Berry Antioxidant",
+                description: "Blueberries, strawberries, raspberries, and pomegranate. Packed with antioxidants.",
+                price: 18,
+                image: "images/berry-antioxidant.jpg",
+                ingredients: ["Blueberries", "Strawberries", "Raspberries", "Pomegranate"],
+                active: true
+            },
+            {
+                id: "tropical-paradise",
+                name: "Tropical Paradise",
+                description: "Pineapple, mango, coconut water, and passion fruit. Escape to the tropics.",
+                price: 18,
+                image: "images/tropical-paradise.jpg",
+                ingredients: ["Pineapple", "Mango", "Coconut Water", "Passion Fruit"],
+                active: true
+            },
+            {
+                id: "root-vegetable",
+                name: "Root Vegetable",
+                description: "Carrot, beet, ginger, and turmeric. Earthy flavors with powerful nutrients.",
+                price: 18,
+                image: "images/root-vegetable.jpg",
+                ingredients: ["Carrot", "Beet", "Ginger", "Turmeric"],
+                active: true
+            }
+        ];
+
+        function renderProducts() {
+            const container = document.getElementById('products-container');
+            container.innerHTML = '';
+
+            products.forEach((product, index) => {
+                const productDiv = document.createElement('div');
+                productDiv.className = 'product-editor';
+                productDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3>Product ${index + 1}</h3>
+                        <div style="display: flex; gap: 1rem; align-items: center;">
+                            <label class="toggle-switch">
+                                <input type="checkbox" ${product.active ? 'checked' : ''} onchange="toggleProduct(${index})">
+                                <span class="slider"></span>
+                            </label>
+                            <span style="font-size: 0.9rem; color: #6c757d;">${product.active ? 'Active' : 'Hidden'}</span>
+                            <button class="btn-admin btn-danger" onclick="deleteProduct(${index})">🗑️ Delete</button>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Product ID (no spaces)</label>
+                            <input type="text" value="${product.id}" onchange="updateProduct(${index}, 'id', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Product Name</label>
+                            <input type="text" value="${product.name}" onchange="updateProduct(${index}, 'name', this.value)">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Price ($)</label>
+                            <input type="number" step="0.01" value="${product.price}" onchange="updateProduct(${index}, 'price', parseFloat(this.value))">
+                        </div>
+                        <div class="form-group">
+                            <label>Image Filename</label>
+                            <input type="text" value="${product.image}" onchange="updateProduct(${index}, 'image', this.value)">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Description</label>
+                            <textarea rows="2" onchange="updateProduct(${index}, 'description', this.value)">${product.description}</textarea>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Ingredients (comma-separated)</label>
+                            <input type="text" value="${product.ingredients.join(', ')}" onchange="updateProduct(${index}, 'ingredients', this.value.split(',').map(i => i.trim()))">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(productDiv);
+            });
+        }
+
+        function addProduct() {
+            const newProduct = {
+                id: "new-product",
+                name: "New Product",
+                description: "Description of your new juice",
+                price: 18,
+                image: "images/new-product.jpg",
+                ingredients: ["Ingredient 1", "Ingredient 2"],
+                active: true
+            };
+            products.push(newProduct);
+            renderProducts();
+        }
+
+        function deleteProduct(index) {
+            if (confirm('Are you sure you want to delete this product?')) {
+                products.splice(index, 1);
+                renderProducts();
+            }
+        }
+
+        function toggleProduct(index) {
+            products[index].active = !products[index].active;
+        }
+
+        function updateProduct(index, field, value) {
+            products[index][field] = value;
+        }
+
+        function generateConfig() {
+            const config = {
+                business: {
+                    name: document.getElementById('business-name').value,
+                    tagline: document.getElementById('business-tagline').value,
+                    description: "Premium fresh juice delivery service committed to your health and wellness journey.",
+                    phone: document.getElementById('business-phone').value,
+                    email: document.getElementById('business-email').value
+                },
+                hero: {
+                    title: document.getElementById('hero-title').value,
+                    description: document.getElementById('hero-description').value,
+                    buttonText: document.getElementById('hero-button').value,
+                    image: document.getElementById('hero-image').value
+                },
+                products: products,
+                features: [
+                    {
+                        icon: "🌱",
+                        title: "100% Organic",
+                        description: "Sourced from certified organic farms with no pesticides or chemicals."
+                    },
+                    {
+                        icon: "❄️",
+                        title: "Cold-Pressed Fresh",
+                        description: "Made fresh daily using cold-press technology to preserve maximum nutrients."
+                    },
+                    {
+                        icon: "🚚",
+                        title: "Fast Delivery",
+                        description: "Delivered fresh to your door within 24 hours of pressing."
+                    }
+                ],
+                payment: {
+                    methods: document.getElementById('payment-methods').value.split('\n').filter(m => m.trim()),
+                    contactMessage: document.getElementById('payment-message').value
+                },
+                social: {
+                    facebook: "#",
+                    instagram: "#",
+                    twitter: "#"
+                }
+            };
+
+            const configOutput = document.getElementById('config-output');
+            configOutput.textContent = JSON.stringify(config, null, 2);
+        }
+
+        function copyConfig() {
+            const configText = document.getElementById('config-output').textContent;
+            navigator.clipboard.writeText(configText).then(() => {
+                alert('Configuration copied to clipboard! Now paste it into your config.json file on GitHub.');
+            });
+        }
+
+        // Initialize
+        renderProducts();
+        generateConfig();
+    </script>
+</body>
+</html>

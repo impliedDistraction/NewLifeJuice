@@ -3,16 +3,182 @@
 
 class NewLifeJuiceApp {
     constructor() {
+        this.config = null;
         this.init();
     }
 
-    init() {
-        this.setupNavigation();
-        this.setupOrderForm();
-        this.setupSmoothScrolling();
-        this.setupIntersectionObserver();
-        this.setupFormValidation();
-        this.setupAccessibility();
+    async init() {
+        try {
+            await this.loadConfig();
+            this.renderContent();
+            this.setupNavigation();
+            this.setupOrderForm();
+            this.setupSmoothScrolling();
+            this.setupIntersectionObserver();
+            this.setupFormValidation();
+            this.setupAccessibility();
+        } catch (error) {
+            console.error('Failed to initialize app:', error);
+            // Fallback to static content if config fails to load
+            this.setupNavigation();
+            this.setupOrderForm();
+            this.setupSmoothScrolling();
+            this.setupIntersectionObserver();
+            this.setupFormValidation();
+            this.setupAccessibility();
+        }
+    }
+
+    // Load configuration from JSON file
+    async loadConfig() {
+        try {
+            const response = await fetch('/config.json');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            this.config = await response.json();
+        } catch (error) {
+            console.warn('Could not load config.json, using static content:', error);
+            // Fallback to null config - static content will be used
+            this.config = null;
+        }
+    }
+
+    // Render dynamic content from config
+    renderContent() {
+        if (!this.config) return;
+
+        this.renderBusinessInfo();
+        this.renderHeroSection();
+        this.renderProducts();
+        this.renderFeatures();
+        this.renderPaymentInfo();
+    }
+
+    renderBusinessInfo() {
+        if (!this.config?.business) return;
+
+        const { name, tagline, email, phone } = this.config.business;
+        
+        // Update navigation logo
+        const logoH1 = document.querySelector('.nav-logo h1');
+        const logoTagline = document.querySelector('.nav-logo .tagline');
+        if (logoH1) logoH1.textContent = name;
+        if (logoTagline) logoTagline.textContent = tagline;
+
+        // Update footer
+        const footerTitle = document.querySelector('.footer-section h3');
+        const footerEmail = document.querySelector('.footer-section p:nth-of-type(1)');
+        const footerPhone = document.querySelector('.footer-section p:nth-of-type(2)');
+        if (footerTitle) footerTitle.textContent = name;
+        if (footerEmail) footerEmail.textContent = `Email: ${email}`;
+        if (footerPhone) footerPhone.textContent = `Phone: ${phone}`;
+    }
+
+    renderHeroSection() {
+        if (!this.config?.hero) return;
+
+        const { title, description, buttonText, image } = this.config.hero;
+        
+        const heroTitle = document.querySelector('.hero-title');
+        const heroDescription = document.querySelector('.hero-description');
+        const heroButton = document.querySelector('.hero-content .btn');
+        const heroImage = document.querySelector('.hero-img');
+
+        if (heroTitle) heroTitle.innerHTML = title;
+        if (heroDescription) heroDescription.textContent = description;
+        if (heroButton) heroButton.textContent = buttonText;
+        if (heroImage) heroImage.src = image;
+    }
+
+    renderProducts() {
+        if (!this.config?.products) return;
+
+        const activeProducts = this.config.products.filter(product => product.active);
+        
+        // Render product showcase
+        this.renderProductShowcase(activeProducts);
+        
+        // Render order form products
+        this.renderOrderFormProducts(activeProducts);
+    }
+
+    renderProductShowcase(products) {
+        const productsGrid = document.querySelector('.products-grid');
+        if (!productsGrid) return;
+
+        productsGrid.innerHTML = '';
+
+        products.forEach(product => {
+            const productCard = document.createElement('div');
+            productCard.className = 'product-card';
+            productCard.innerHTML = `
+                <div class="product-image">
+                    <img src="${product.image}" alt="${product.name}" loading="lazy">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">${product.name}</h3>
+                    <p class="product-description">${product.description}</p>
+                    <div class="product-price">$${product.price}</div>
+                </div>
+            `;
+            productsGrid.appendChild(productCard);
+        });
+    }
+
+    renderOrderFormProducts(products) {
+        const productsSelection = document.querySelector('.products-selection');
+        if (!productsSelection) return;
+
+        productsSelection.innerHTML = '';
+
+        products.forEach(product => {
+            const productSelector = document.createElement('div');
+            productSelector.className = 'product-selector';
+            productSelector.innerHTML = `
+                <label for="${product.id}" class="product-label">
+                    <span class="product-name">${product.name} - $${product.price}</span>
+                    <input type="number" id="${product.id}" name="${product.id}_quantity" min="0" max="20" value="0" class="quantity-input" data-price="${product.price}">
+                </label>
+            `;
+            productsSelection.appendChild(productSelector);
+        });
+    }
+
+    renderFeatures() {
+        if (!this.config?.features) return;
+
+        const featuresContainer = document.querySelector('.features');
+        if (!featuresContainer) return;
+
+        featuresContainer.innerHTML = '';
+
+        this.config.features.forEach(feature => {
+            const featureDiv = document.createElement('div');
+            featureDiv.className = 'feature';
+            featureDiv.innerHTML = `
+                <div class="feature-icon">${feature.icon}</div>
+                <div class="feature-content">
+                    <h3>${feature.title}</h3>
+                    <p>${feature.description}</p>
+                </div>
+            `;
+            featuresContainer.appendChild(featureDiv);
+        });
+    }
+
+    renderPaymentInfo() {
+        if (!this.config?.payment) return;
+
+        const paymentInfo = document.querySelector('.payment-info');
+        if (!paymentInfo) return;
+
+        const methodsList = this.config.payment.methods.map(method => `<li>${method}</li>`).join('');
+        
+        paymentInfo.innerHTML = `
+            <p>${this.config.payment.contactMessage}</p>
+            <ul>${methodsList}</ul>
+        `;
     }
 
     // Navigation functionality
@@ -63,26 +229,29 @@ class NewLifeJuiceApp {
 
     // Order form functionality
     setupOrderForm() {
-        const quantityInputs = document.querySelectorAll('.quantity-input');
-        const orderTotal = document.getElementById('orderTotal');
         const form = document.querySelector('.order-form');
-        const pricePerItem = 18;
+        const orderTotal = document.getElementById('orderTotal');
 
         // Calculate total when quantities change
         const calculateTotal = () => {
             let total = 0;
+            const quantityInputs = document.querySelectorAll('.quantity-input');
+            
             quantityInputs.forEach(input => {
                 const quantity = parseInt(input.value) || 0;
-                total += quantity * pricePerItem;
+                const price = parseFloat(input.dataset.price) || 18; // fallback to $18
+                total += quantity * price;
             });
             
-            orderTotal.textContent = `$${total.toFixed(2)}`;
+            if (orderTotal) {
+                orderTotal.textContent = `$${total.toFixed(2)}`;
+            }
             
             // Update hidden input for form submission
-            let existingTotalInput = form.querySelector('input[name="order_total"]');
+            let existingTotalInput = form?.querySelector('input[name="order_total"]');
             if (existingTotalInput) {
                 existingTotalInput.value = total.toFixed(2);
-            } else {
+            } else if (form) {
                 const totalInput = document.createElement('input');
                 totalInput.type = 'hidden';
                 totalInput.name = 'order_total';
@@ -91,29 +260,32 @@ class NewLifeJuiceApp {
             }
         };
 
-        // Add event listeners to quantity inputs
-        quantityInputs.forEach(input => {
-            input.addEventListener('input', calculateTotal);
-            input.addEventListener('change', calculateTotal);
-            
-            // Ensure valid input
-            input.addEventListener('blur', () => {
-                const value = parseInt(input.value);
+        // Setup event listeners for quantity inputs (using event delegation for dynamic content)
+        document.addEventListener('input', (e) => {
+            if (e.target.classList.contains('quantity-input')) {
+                calculateTotal();
+            }
+        });
+
+        document.addEventListener('change', (e) => {
+            if (e.target.classList.contains('quantity-input')) {
+                // Ensure valid input
+                const value = parseInt(e.target.value);
                 if (isNaN(value) || value < 0) {
-                    input.value = 0;
+                    e.target.value = 0;
                 } else if (value > 20) {
-                    input.value = 20;
+                    e.target.value = 20;
                 }
                 calculateTotal();
-            });
+            }
         });
 
         // Initial calculation
-        calculateTotal();
+        setTimeout(calculateTotal, 100); // Small delay to ensure dynamic content is loaded
 
         // Form submission handling
         form?.addEventListener('submit', (e) => {
-            const total = parseFloat(orderTotal.textContent.replace('$', ''));
+            const total = parseFloat(orderTotal?.textContent.replace('$', '') || '0');
             
             if (total === 0) {
                 e.preventDefault();
@@ -123,14 +295,18 @@ class NewLifeJuiceApp {
 
             // Show loading state
             const submitBtn = form.querySelector('.submit-btn');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = 'Placing Order...';
-            submitBtn.disabled = true;
+            const originalText = submitBtn?.textContent || 'Place Order';
+            if (submitBtn) {
+                submitBtn.textContent = 'Placing Order...';
+                submitBtn.disabled = true;
+            }
 
             // Reset button after a delay (in case form submission fails)
             setTimeout(() => {
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
+                if (submitBtn) {
+                    submitBtn.textContent = originalText;
+                    submitBtn.disabled = false;
+                }
             }, 10000);
 
             this.showNotification('Order submitted! We\'ll contact you within 24 hours.', 'success');
