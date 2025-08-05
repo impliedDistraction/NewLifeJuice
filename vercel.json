@@ -1,0 +1,11 @@
+{
+  "functions": {
+    "api/ai-assistant.js": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "OPENAI_API_KEY": "@openai-api-key",
+    "ADMIN_PASSWORD": "@admin-password"
+  }
+}

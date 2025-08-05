@@ -9,6 +9,8 @@
     "build": "echo 'Static site - no build process required'",
     "test": "echo 'Tests can be added here'",
     "deploy": "echo 'Push to main branch to deploy via GitHub Pages'",
+    "deploy-ai": "vercel --prod",
+    "deploy-ai-dev": "vercel",
     "optimize-images": "echo 'Use imageoptim or similar tools to optimize images'",
     "validate-html": "echo 'Use HTML validator to check markup'"
   },
@@ -32,7 +34,9 @@
     "url": "https://github.com/impliedDistraction/NewLifeJuice/issues"
   },
   "homepage": "https://impliedDistraction.github.io/NewLifeJuice",
-  "devDependencies": {},
+  "devDependencies": {
+    "vercel": "^32.0.0"
+  },
   "dependencies": {},
   "browserslist": [
     "> 1%",

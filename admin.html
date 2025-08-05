@@ -413,6 +413,193 @@
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
         }
+
+        /* AI Assistant Styles */
+        .ai-assistant {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+        }
+
+        .ai-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .ai-icon-large {
+            font-size: 2rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .ai-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .ai-controls select {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.75rem;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .ai-controls select option {
+            background: #2c3e50;
+            color: white;
+        }
+
+        .btn-ai {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-ai:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-ai:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .ai-prompt {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+            backdrop-filter: blur(10px);
+        }
+
+        .ai-prompt::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .ai-result {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .ai-suggestion-text {
+            background: rgba(255, 255, 255, 0.95);
+            color: #2c3e50;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            line-height: 1.6;
+            font-family: 'Georgia', serif;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .ai-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .ai-actions .btn {
+            padding: 0.75rem 1.25rem;
+            font-size: 0.9rem;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .ai-error {
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid rgba(220, 53, 69, 0.5);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .quick-prompt-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .quick-prompt {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            backdrop-filter: blur(10px);
+        }
+
+        .quick-prompt:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .ai-usage-info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .ai-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .ai-actions {
+                flex-direction: column;
+            }
+            
+            .quick-prompt-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -658,6 +845,75 @@ Cash at Pickup</textarea>
             <button class="btn-admin save-github-btn" onclick="saveToGitHub()">💾 Save to GitHub (Instant)</button>
             <button class="btn-admin" onclick="generateConfig()">🔄 Generate Config</button>
             <button class="btn-admin" onclick="copyConfig()">📋 Copy to Clipboard</button>
+        </div>
+
+        <!-- AI Assistant Section -->
+        <div class="admin-section">
+            <div class="ai-assistant">
+                <div class="ai-header">
+                    <span class="ai-icon-large">🤖</span>
+                    <div>
+                        <h2 style="margin: 0; color: white;">AI Writing Assistant</h2>
+                        <p style="margin: 0.5rem 0 0 0; opacity: 0.9;">Generate professional content for your juice business</p>
+                    </div>
+                </div>
+                
+                <div class="ai-controls">
+                    <select id="aiType" class="ai-select">
+                        <option value="product-description">Product Description</option>
+                        <option value="hero-copy">Hero Section Copy</option>
+                        <option value="marketing-text">Marketing Text</option>
+                        <option value="seasonal-promo">Seasonal Promotion</option>
+                        <option value="business-copy">Business Information</option>
+                        <option value="feature-benefit">Feature Benefits</option>
+                    </select>
+                    <button id="aiGenerateBtn" class="btn-ai" disabled>
+                        <span class="ai-icon">✨</span> Generate AI Content
+                    </button>
+                </div>
+                
+                <div class="ai-input-section">
+                    <label for="aiPrompt" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Describe what you need:</label>
+                    <textarea id="aiPrompt" class="ai-prompt" 
+                        placeholder="E.g., 'A description for a green juice with spinach, apple, and ginger that boosts energy and detoxifies'"
+                        rows="3"></textarea>
+                </div>
+                
+                <div id="aiResult" class="ai-result hidden">
+                    <h4 style="margin: 0 0 1rem 0; color: white;">✨ AI Suggestion:</h4>
+                    <div id="aiSuggestion" class="ai-suggestion-text"></div>
+                    <div class="ai-actions">
+                        <button id="aiCopyBtn" class="btn btn-secondary">📋 Copy</button>
+                        <button id="aiUseBtn" class="btn btn-primary">✅ Use This</button>
+                        <button id="aiRegenerateBtn" class="btn btn-outline">🔄 Regenerate</button>
+                    </div>
+                </div>
+                
+                <div id="aiError" class="ai-error hidden"></div>
+                
+                <!-- Quick AI Prompts -->
+                <div class="ai-quick-prompts" style="margin-top: 2rem;">
+                    <h4 style="margin: 0 0 1rem 0; color: white;">🚀 Quick Prompts:</h4>
+                    <div class="quick-prompt-buttons">
+                        <button class="quick-prompt" data-prompt="Write a compelling product description for a green detox juice with kale, spinach, cucumber, and apple">🥬 Green Detox Description</button>
+                        <button class="quick-prompt" data-prompt="Create an engaging hero headline for a premium juice delivery service">🎯 Hero Headline</button>
+                        <button class="quick-prompt" data-prompt="Write about the health benefits of cold-pressed juices for wellness">💚 Health Benefits Copy</button>
+                        <button class="quick-prompt" data-prompt="Create a seasonal summer juice promotion highlighting refreshing tropical flavors">🏖️ Summer Promotion</button>
+                        <button class="quick-prompt" data-prompt="Write professional business copy about our commitment to organic, fresh ingredients">🌱 About Our Quality</button>
+                        <button class="quick-prompt" data-prompt="Create copy for a feature about convenient home delivery service">🚚 Delivery Feature</button>
+                    </div>
+                </div>
+
+                <div class="ai-usage-info">
+                    <strong>💡 AI Tips:</strong>
+                    <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+                        <li>Be specific about ingredients and benefits you want to highlight</li>
+                        <li>Mention your target audience (health-conscious, busy professionals, etc.)</li>
+                        <li>Include the tone you want (professional, friendly, energetic)</li>
+                        <li>Try different prompts to get varied results</li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1263,7 +1519,7 @@ Enter token (or click Cancel to use manual method):`);
             }
         }
 
-        // Enhanced drag and drop for image upload areas
+        // Initialize AI Assistant when page loads
         document.addEventListener('DOMContentLoaded', function() {
             const uploadAreas = document.querySelectorAll('.image-upload-area');
             
@@ -1311,7 +1567,288 @@ Enter token (or click Cancel to use manual method):`);
                     closeAddProductModal();
                 }
             });
+
+            // Initialize AI Assistant
+            new AIAssistant();
         });
+
+        // AI Assistant Class
+        class AIAssistant {
+            constructor() {
+                // Update this to your deployed Vercel endpoint
+                this.apiEndpoint = 'https://your-app-name.vercel.app/api/ai-assistant';
+                this.isLoading = false;
+                this.currentTarget = null;
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.checkAPIAvailability();
+            }
+
+            setupEventListeners() {
+                const generateBtn = document.getElementById('aiGenerateBtn');
+                const promptInput = document.getElementById('aiPrompt');
+                const copyBtn = document.getElementById('aiCopyBtn');
+                const useBtn = document.getElementById('aiUseBtn');
+                const regenerateBtn = document.getElementById('aiRegenerateBtn');
+
+                // Enable/disable generate button based on prompt
+                promptInput?.addEventListener('input', () => {
+                    const hasPrompt = promptInput.value.trim().length > 0;
+                    if (generateBtn) {
+                        generateBtn.disabled = !hasPrompt || this.isLoading;
+                    }
+                });
+
+                // Generate AI suggestion
+                generateBtn?.addEventListener('click', () => this.generateSuggestion());
+
+                // Copy suggestion
+                copyBtn?.addEventListener('click', () => this.copySuggestion());
+
+                // Use suggestion (auto-fill appropriate field)
+                useBtn?.addEventListener('click', () => this.useSuggestion());
+
+                // Regenerate with same prompt
+                regenerateBtn?.addEventListener('click', () => this.generateSuggestion());
+
+                // Quick prompts
+                document.querySelectorAll('.quick-prompt').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const prompt = e.target.getAttribute('data-prompt');
+                        document.getElementById('aiPrompt').value = prompt;
+                        document.getElementById('aiGenerateBtn').disabled = false;
+                    });
+                });
+            }
+
+            async checkAPIAvailability() {
+                try {
+                    const response = await fetch(this.apiEndpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ test: true })
+                    });
+                    
+                    if (response.ok) {
+                        this.showAIInfo('🤖 AI Assistant is ready to help!');
+                    } else {
+                        throw new Error('API not available');
+                    }
+                } catch (error) {
+                    this.showAIError('AI features are currently unavailable. Please check your setup or try again later.');
+                    document.getElementById('aiGenerateBtn').disabled = true;
+                }
+            }
+
+            async generateSuggestion() {
+                const prompt = document.getElementById('aiPrompt').value.trim();
+                const type = document.getElementById('aiType').value;
+                const generateBtn = document.getElementById('aiGenerateBtn');
+
+                if (!prompt || this.isLoading) return;
+
+                this.isLoading = true;
+                generateBtn.disabled = true;
+                generateBtn.innerHTML = '<span class="ai-icon">⏳</span> Generating...';
+
+                this.hideAIError();
+                this.hideAIResult();
+
+                try {
+                    // Get admin password from the session
+                    const adminPassword = 'NewLife2025!'; // Same as the admin panel password
+
+                    const response = await fetch(this.apiEndpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            prompt,
+                            type,
+                            adminPassword
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.error || `HTTP ${response.status}: Failed to generate suggestion`);
+                    }
+
+                    const data = await response.json();
+                    this.showAISuggestion(data.suggestion);
+
+                } catch (error) {
+                    console.error('AI Generation Error:', error);
+                    this.showAIError(`Error: ${error.message}. Please check your API setup and try again.`);
+                } finally {
+                    this.isLoading = false;
+                    generateBtn.disabled = false;
+                    generateBtn.innerHTML = '<span class="ai-icon">✨</span> Generate AI Content';
+                }
+            }
+
+            showAISuggestion(suggestion) {
+                const resultDiv = document.getElementById('aiResult');
+                const suggestionDiv = document.getElementById('aiSuggestion');
+                
+                if (suggestionDiv) {
+                    suggestionDiv.textContent = suggestion;
+                }
+                
+                if (resultDiv) {
+                    resultDiv.classList.remove('hidden');
+                    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            }
+
+            copySuggestion() {
+                const suggestion = document.getElementById('aiSuggestion').textContent;
+                navigator.clipboard.writeText(suggestion).then(() => {
+                    this.showNotification('✅ Copied to clipboard!', 'success');
+                }).catch(() => {
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = suggestion;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    this.showNotification('✅ Copied to clipboard!', 'success');
+                });
+            }
+
+            useSuggestion() {
+                const suggestion = document.getElementById('aiSuggestion').textContent;
+                const type = document.getElementById('aiType').value;
+
+                // Auto-fill appropriate field based on type
+                let targetField = null;
+
+                switch (type) {
+                    case 'product-description':
+                        // Check if we're in the add product modal
+                        targetField = document.getElementById('new-product-description');
+                        if (!targetField) {
+                            // Find the first product description textarea
+                            targetField = document.querySelector('textarea[id^="product-desc-"]');
+                        }
+                        break;
+                    case 'hero-copy':
+                        targetField = document.getElementById('hero-title') || 
+                                     document.getElementById('hero-description');
+                        break;
+                    case 'marketing-text':
+                        targetField = document.getElementById('business-tagline') ||
+                                     document.getElementById('hero-description');
+                        break;
+                    case 'business-copy':
+                        targetField = document.getElementById('business-description') ||
+                                     document.getElementById('business-tagline');
+                        break;
+                    case 'seasonal-promo':
+                        targetField = document.getElementById('hero-description') ||
+                                     document.getElementById('products-section-description');
+                        break;
+                    case 'feature-benefit':
+                        // Look for feature description fields
+                        targetField = document.querySelector('textarea[onchange*="updateFeature"]');
+                        break;
+                }
+
+                if (targetField) {
+                    targetField.value = suggestion;
+                    targetField.focus();
+                    
+                    // Trigger change events to update previews
+                    targetField.dispatchEvent(new Event('input', { bubbles: true }));
+                    targetField.dispatchEvent(new Event('change', { bubbles: true }));
+                    
+                    this.showNotification('✅ Applied AI suggestion!', 'success');
+                } else {
+                    this.copySuggestion();
+                    this.showNotification('💡 Suggestion copied! Paste it in the appropriate field.', 'info');
+                }
+            }
+
+            showAIError(message) {
+                const errorDiv = document.getElementById('aiError');
+                if (errorDiv) {
+                    errorDiv.innerHTML = `<strong>⚠️ ${message}</strong>`;
+                    errorDiv.classList.remove('hidden');
+                }
+            }
+
+            showAIInfo(message) {
+                const errorDiv = document.getElementById('aiError');
+                if (errorDiv) {
+                    errorDiv.innerHTML = `<strong>${message}</strong>`;
+                    errorDiv.style.background = 'rgba(40, 167, 69, 0.2)';
+                    errorDiv.style.borderColor = 'rgba(40, 167, 69, 0.5)';
+                    errorDiv.classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        errorDiv.classList.add('hidden');
+                        errorDiv.style.background = 'rgba(220, 53, 69, 0.2)';
+                        errorDiv.style.borderColor = 'rgba(220, 53, 69, 0.5)';
+                    }, 3000);
+                }
+            }
+
+            hideAIError() {
+                const errorDiv = document.getElementById('aiError');
+                if (errorDiv) {
+                    errorDiv.classList.add('hidden');
+                }
+            }
+
+            hideAIResult() {
+                const resultDiv = document.getElementById('aiResult');
+                if (resultDiv) {
+                    resultDiv.classList.add('hidden');
+                }
+            }
+
+            showNotification(message, type = 'info') {
+                // Create a temporary notification
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
+                    color: white;
+                    padding: 1rem 1.5rem;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    z-index: 9999;
+                    font-weight: 500;
+                    max-width: 300px;
+                    animation: slideIn 0.3s ease-out;
+                `;
+                notification.textContent = message;
+                
+                // Add slide-in animation
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                `;
+                document.head.appendChild(style);
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.remove();
+                    style.remove();
+                }, 3000);
+            }
+        }
 
         function deleteProduct(index) {
             if (confirm('Are you sure you want to delete this product?')) {
