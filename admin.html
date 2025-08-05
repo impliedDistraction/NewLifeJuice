@@ -173,6 +173,50 @@
         .preview-button:hover {
             transform: translateY(-2px);
         }
+        .image-preview {
+            max-width: 100px;
+            max-height: 75px;
+            border-radius: 4px;
+            object-fit: cover;
+            border: 1px solid #ddd;
+            margin-top: 0.5rem;
+            display: block;
+        }
+        .image-preview.error {
+            display: none;
+        }
+        .bulk-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .template-info {
+            background: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 6px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+        .success-flash {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+            animation: fadeInOut 3s ease-in-out;
+        }
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            20%, 80% { opacity: 1; }
+        }
+        .section-divider {
+            border-top: 2px solid var(--primary-green);
+            margin: 2rem 0 1rem 0;
+            padding-top: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -236,7 +280,13 @@
                     <input type="text" id="hero-button" value="Start Your Journey">
                 </div>
                 <div class="form-group">
-                    <label for="hero-image">Hero Image Filename</label>
+                    <label for="hero-image">Hero Image URL/Filename 
+                        <span style="font-size: 0.8rem; color: #6c757d;">
+                            <br>• Local: images/hero-juice.jpg
+                            <br>• Cloudinary: https://res.cloudinary.com/...
+                            <br>• External: https://your-image-url.com/...
+                        </span>
+                    </label>
                     <input type="text" id="hero-image" value="images/hero-juice.jpg">
                 </div>
             </div>
@@ -244,10 +294,88 @@
 
         <div class="admin-section">
             <h2>🥤 Products</h2>
+            <div class="help-text">
+                💡 <strong>Image Tips:</strong> Use Cloudinary, Imgur, or upload to GitHub's images/ folder. 
+                <br><strong>Seasonal Tip:</strong> Use the Active toggle to hide/show seasonal products instantly!
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <button class="btn-admin" onclick="addProduct()">➕ Add New Product</button>
+                <button class="btn-admin" onclick="toggleAllProducts(true)" style="background: #28a745;">✅ Enable All</button>
+                <button class="btn-admin" onclick="toggleAllProducts(false)" style="background: #6c757d;">⏸️ Disable All</button>
+                <button class="btn-admin" onclick="saveTemplate()" style="background: #17a2b8;">💾 Save Template</button>
+                <button class="btn-admin" onclick="loadTemplate()" style="background: #ffc107; color: #000;">📂 Load Template</button>
+            </div>
             <div id="products-container">
                 <!-- Products will be dynamically added here -->
             </div>
-            <button class="btn-admin" onclick="addProduct()">➕ Add New Product</button>
+        </div>
+
+        <div class="admin-section">
+            <h2>🌟 Features & About Section</h2>
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label for="products-section-title">Products Section Title</label>
+                    <input type="text" id="products-section-title" value="Our Premium Collection">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label for="products-section-description">Products Section Description</label>
+                    <textarea id="products-section-description" rows="2">Five carefully crafted blends, each designed to nourish your body and energize your life.</textarea>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label for="about-section-title">About Section Title</label>
+                    <input type="text" id="about-section-title" value="Why Choose New Life Juice?">
+                </div>
+            </div>
+            
+            <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Feature Highlights</h3>
+            <div id="features-container">
+                <!-- Features will be dynamically added here -->
+            </div>
+            <button class="btn-admin" onclick="addFeature()">➕ Add Feature</button>
+        </div>
+
+        <div class="admin-section">
+            <h2>📝 Order Section</h2>
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label for="order-section-title">Order Section Title</label>
+                    <input type="text" id="order-section-title" value="Place Your Order">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group full-width">
+                    <label for="order-section-description">Order Section Description</label>
+                    <textarea id="order-section-description" rows="2">Select your juices and we'll deliver fresh nutrition to your door.</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h2>🌐 Social Media & Footer</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="facebook-url">Facebook URL</label>
+                    <input type="url" id="facebook-url" value="#" placeholder="https://facebook.com/yourpage">
+                </div>
+                <div class="form-group">
+                    <label for="instagram-url">Instagram URL</label>
+                    <input type="url" id="instagram-url" value="#" placeholder="https://instagram.com/yourpage">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="twitter-url">Twitter URL</label>
+                    <input type="url" id="twitter-url" value="#" placeholder="https://twitter.com/yourpage">
+                </div>
+                <div class="form-group">
+                    <label for="business-description">Business Description</label>
+                    <input type="text" id="business-description" value="Premium fresh juice delivery service committed to your health and wellness journey.">
+                </div>
+            </div>
         </div>
 
         <div class="admin-section">
@@ -418,6 +546,24 @@ Enter token (or click Cancel to use manual method):`);
             }
         ];
 
+        let features = [
+            {
+                icon: "🌱",
+                title: "100% Organic",
+                description: "Sourced from certified organic farms with no pesticides or chemicals."
+            },
+            {
+                icon: "❄️",
+                title: "Cold-Pressed Fresh",
+                description: "Made fresh daily using cold-press technology to preserve maximum nutrients."
+            },
+            {
+                icon: "🚚",
+                title: "Fast Delivery",
+                description: "Delivered fresh to your door within 24 hours of pressing."
+            }
+        ];
+
         function renderProducts() {
             const container = document.getElementById('products-container');
             container.innerHTML = '';
@@ -453,8 +599,16 @@ Enter token (or click Cancel to use manual method):`);
                             <input type="number" step="0.01" value="${product.price}" onchange="updateProduct(${index}, 'price', parseFloat(this.value))">
                         </div>
                         <div class="form-group">
-                            <label>Image Filename</label>
-                            <input type="text" value="${product.image}" onchange="updateProduct(${index}, 'image', this.value)">
+                            <label>Image URL/Filename
+                                <span style="font-size: 0.8rem; color: #6c757d;">
+                                    <br>• Local: images/product.jpg
+                                    <br>• External: https://...
+                                </span>
+                            </label>
+                            <input type="text" value="${product.image}" onchange="updateProduct(${index}, 'image', this.value)" onblur="renderProducts()">
+                            <div style="margin-top: 0.5rem;">
+                                ${product.image ? `<img src="${product.image}" alt="Preview" style="max-width: 100px; max-height: 75px; border-radius: 4px; object-fit: cover;" onerror="this.style.display='none'">` : ''}
+                            </div>
                         </div>
                     </div>
                     <div class="form-row">
@@ -471,6 +625,40 @@ Enter token (or click Cancel to use manual method):`);
                     </div>
                 `;
                 container.appendChild(productDiv);
+            });
+        }
+
+        function renderFeatures() {
+            const container = document.getElementById('features-container');
+            container.innerHTML = '';
+
+            features.forEach((feature, index) => {
+                const featureDiv = document.createElement('div');
+                featureDiv.className = 'product-editor';
+                featureDiv.style.marginBottom = '1rem';
+                featureDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h4>Feature ${index + 1}</h4>
+                        <button class="btn-admin btn-danger" onclick="deleteFeature(${index})">🗑️ Delete</button>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="width: 100px;">
+                            <label>Emoji Icon</label>
+                            <input type="text" value="${feature.icon}" onchange="updateFeature(${index}, 'icon', this.value)" style="font-size: 1.5rem; text-align: center;">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>Title</label>
+                            <input type="text" value="${feature.title}" onchange="updateFeature(${index}, 'title', this.value)">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label>Description</label>
+                            <textarea rows="2" onchange="updateFeature(${index}, 'description', this.value)">${feature.description}</textarea>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(featureDiv);
             });
         }
 
@@ -501,6 +689,73 @@ Enter token (or click Cancel to use manual method):`);
 
         function updateProduct(index, field, value) {
             products[index][field] = value;
+        }
+
+        function addFeature() {
+            const newFeature = {
+                icon: "⭐",
+                title: "New Feature",
+                description: "Description of your new feature"
+            };
+            features.push(newFeature);
+            renderFeatures();
+        }
+
+        function deleteFeature(index) {
+            if (confirm('Are you sure you want to delete this feature?')) {
+                features.splice(index, 1);
+                renderFeatures();
+            }
+        }
+
+        function updateFeature(index, field, value) {
+            features[index][field] = value;
+        }
+
+        function toggleAllProducts(active) {
+            products.forEach(product => product.active = active);
+            renderProducts();
+        }
+
+        function saveTemplate() {
+            const templateName = prompt('Enter a name for this template (e.g., "Spring 2025", "Summer Menu"):');
+            if (templateName) {
+                const template = {
+                    name: templateName,
+                    products: JSON.parse(JSON.stringify(products)),
+                    features: JSON.parse(JSON.stringify(features)),
+                    date: new Date().toISOString()
+                };
+                localStorage.setItem(`njl_template_${templateName}`, JSON.stringify(template));
+                alert(`✅ Template "${templateName}" saved! You can load it anytime.`);
+            }
+        }
+
+        function loadTemplate() {
+            const templateNames = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('njl_template_')) {
+                    templateNames.push(key.replace('njl_template_', ''));
+                }
+            }
+            
+            if (templateNames.length === 0) {
+                alert('No saved templates found. Save your current configuration as a template first!');
+                return;
+            }
+            
+            const templateName = prompt(`Choose a template to load:\n\n${templateNames.join('\n')}\n\nEnter template name:`);
+            if (templateName && templateNames.includes(templateName)) {
+                const template = JSON.parse(localStorage.getItem(`njl_template_${templateName}`));
+                products = template.products;
+                features = template.features;
+                renderProducts();
+                renderFeatures();
+                alert(`✅ Template "${templateName}" loaded!`);
+            } else if (templateName) {
+                alert('Template not found. Please check the name and try again.');
+            }
         }
 
         async function saveToGitHub() {
@@ -558,7 +813,7 @@ Enter token (or click Cancel to use manual method):`);
                 business: {
                     name: document.getElementById('business-name').value,
                     tagline: document.getElementById('business-tagline').value,
-                    description: "Premium fresh juice delivery service committed to your health and wellness journey.",
+                    description: document.getElementById('business-description').value,
                     phone: document.getElementById('business-phone').value,
                     email: document.getElementById('business-email').value
                 },
@@ -568,32 +823,29 @@ Enter token (or click Cancel to use manual method):`);
                     buttonText: document.getElementById('hero-button').value,
                     image: document.getElementById('hero-image').value
                 },
-                products: products,
-                features: [
-                    {
-                        icon: "🌱",
-                        title: "100% Organic",
-                        description: "Sourced from certified organic farms with no pesticides or chemicals."
+                sections: {
+                    products: {
+                        title: document.getElementById('products-section-title').value,
+                        description: document.getElementById('products-section-description').value
                     },
-                    {
-                        icon: "❄️",
-                        title: "Cold-Pressed Fresh",
-                        description: "Made fresh daily using cold-press technology to preserve maximum nutrients."
+                    about: {
+                        title: document.getElementById('about-section-title').value
                     },
-                    {
-                        icon: "🚚",
-                        title: "Fast Delivery",
-                        description: "Delivered fresh to your door within 24 hours of pressing."
+                    order: {
+                        title: document.getElementById('order-section-title').value,
+                        description: document.getElementById('order-section-description').value
                     }
-                ],
+                },
+                products: products,
+                features: features,
                 payment: {
                     methods: document.getElementById('payment-methods').value.split('\n').filter(m => m.trim()),
                     contactMessage: document.getElementById('payment-message').value
                 },
                 social: {
-                    facebook: "#",
-                    instagram: "#",
-                    twitter: "#"
+                    facebook: document.getElementById('facebook-url').value,
+                    instagram: document.getElementById('instagram-url').value,
+                    twitter: document.getElementById('twitter-url').value
                 }
             };
         }
@@ -613,8 +865,69 @@ Enter token (or click Cancel to use manual method):`);
 
         // Initialize with security check
         if (checkAdminAccess()) {
+            loadConfigValues();
             renderProducts();
+            renderFeatures();
             generateConfig();
+        }
+
+        function loadConfigValues() {
+            // Load values from existing config if available
+            fetch('config.json')
+                .then(response => response.json())
+                .then(config => {
+                    // Business info
+                    if (config.business) {
+                        document.getElementById('business-name').value = config.business.name || 'New Life Juice';
+                        document.getElementById('business-tagline').value = config.business.tagline || 'Premium Fresh Juice';
+                        document.getElementById('business-phone').value = config.business.phone || '(555) 123-JUICE';
+                        document.getElementById('business-email').value = config.business.email || 'orders@newlifejuice.com';
+                        document.getElementById('business-description').value = config.business.description || 'Premium fresh juice delivery service committed to your health and wellness journey.';
+                    }
+                    
+                    // Hero section
+                    if (config.hero) {
+                        document.getElementById('hero-title').value = config.hero.title || 'Fresh. Natural. Life-Changing.';
+                        document.getElementById('hero-description').value = config.hero.description || 'Experience the power of premium fresh juices...';
+                        document.getElementById('hero-button').value = config.hero.buttonText || 'Start Your Journey';
+                        document.getElementById('hero-image').value = config.hero.image || 'images/hero-juice.jpg';
+                    }
+                    
+                    // Section titles
+                    if (config.sections) {
+                        document.getElementById('products-section-title').value = config.sections.products?.title || 'Our Premium Collection';
+                        document.getElementById('products-section-description').value = config.sections.products?.description || 'Five carefully crafted blends...';
+                        document.getElementById('about-section-title').value = config.sections.about?.title || 'Why Choose New Life Juice?';
+                        document.getElementById('order-section-title').value = config.sections.order?.title || 'Place Your Order';
+                        document.getElementById('order-section-description').value = config.sections.order?.description || 'Select your juices and we\'ll deliver...';
+                    }
+                    
+                    // Social media
+                    if (config.social) {
+                        document.getElementById('facebook-url').value = config.social.facebook || '#';
+                        document.getElementById('instagram-url').value = config.social.instagram || '#';
+                        document.getElementById('twitter-url').value = config.social.twitter || '#';
+                    }
+                    
+                    // Payment info
+                    if (config.payment) {
+                        document.getElementById('payment-methods').value = config.payment.methods?.join('\n') || 'Credit/Debit Cards\nPayPal\nVenmo\nCash on Delivery\nCash at Pickup';
+                        document.getElementById('payment-message').value = config.payment.contactMessage || 'We\'ll contact you within 24 hours...';
+                    }
+                    
+                    // Load products and features from config
+                    if (config.products) {
+                        products = config.products;
+                        renderProducts();
+                    }
+                    if (config.features) {
+                        features = config.features;
+                        renderFeatures();
+                    }
+                })
+                .catch(error => {
+                    console.log('Could not load existing config, using defaults');
+                });
         }
     </script>
 </body>

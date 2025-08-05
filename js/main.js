@@ -50,9 +50,11 @@ class NewLifeJuiceApp {
 
         this.renderBusinessInfo();
         this.renderHeroSection();
+        this.renderSectionTitles();
         this.renderProducts();
         this.renderFeatures();
         this.renderPaymentInfo();
+        this.renderSocialLinks();
     }
 
     renderBusinessInfo() {
@@ -235,6 +237,59 @@ class NewLifeJuiceApp {
             <p>${this.config.payment.contactMessage}</p>
             <ul>${methodsList}</ul>
         `;
+    }
+
+    renderSectionTitles() {
+        if (!this.config?.sections) return;
+
+        const { products, about, order } = this.config.sections;
+        
+        // Update section titles
+        if (products?.title) {
+            const productTitle = document.querySelector('.products .section-title');
+            if (productTitle) productTitle.textContent = products.title;
+        }
+        
+        if (products?.description) {
+            const productDesc = document.querySelector('.products .section-description');
+            if (productDesc) productDesc.textContent = products.description;
+        }
+        
+        if (about?.title) {
+            const aboutTitle = document.querySelector('.about .section-title');
+            if (aboutTitle) aboutTitle.textContent = about.title;
+        }
+        
+        if (order?.title) {
+            const orderTitle = document.querySelector('.order-section .section-title');
+            if (orderTitle) orderTitle.textContent = order.title;
+        }
+        
+        if (order?.description) {
+            const orderDesc = document.querySelector('.order-section .section-description');
+            if (orderDesc) orderDesc.textContent = order.description;
+        }
+    }
+
+    renderSocialLinks() {
+        if (!this.config?.social) return;
+
+        const { facebook, instagram, twitter } = this.config.social;
+        
+        const socialLinks = {
+            'facebook': facebook,
+            'instagram': instagram,
+            'twitter': twitter
+        };
+        
+        Object.entries(socialLinks).forEach(([platform, url]) => {
+            const link = document.querySelector(`[data-social="${platform}"]`);
+            if (link && url && url !== '#') {
+                link.href = url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+            }
+        });
     }
 
     // Navigation functionality
