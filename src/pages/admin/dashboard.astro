@@ -1,48 +1,43 @@
 ---
-// Advanced AI-Powered Admin Dashboard
+// Advanced AI-Powered Admin Dashboard  
 // Multi-client architecture foundation
+import Layout from '../layouts/Layout.astro';
 ---
 
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>New Life Juice - AI Admin Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    animation: {
-                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                        'bounce-slow': 'bounce 2s infinite',
-                        'gradient': 'gradient 6s ease infinite',
-                    },
-                    keyframes: {
-                        gradient: {
-                            '0%, 100%': {
-                                'background-size': '200% 200%',
-                                'background-position': 'left center'
-                            },
-                            '50%': {
-                                'background-size': '200% 200%',
-                                'background-position': 'right center'
-                            },
-                        }
-                    },
-                    backgroundImage: {
-                        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-                        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-                    }
-                }
+<Layout title="New Life Juice - AI Admin Dashboard">
+    <style>
+        /* Custom animations and gradients */
+        @keyframes gradient {
+            0%, 100% {
+                background-size: 200% 200%;
+                background-position: left center;
+            }
+            50% {
+                background-size: 200% 200%;
+                background-position: right center;
             }
         }
-    </script>
-    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+        
+        .animate-gradient {
+            animation: gradient 6s ease infinite;
+        }
+        
+        .animate-pulse-slow {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        .animate-bounce-slow {
+            animation: bounce 2s infinite;
+        }
+    </style>
+
+    <!-- FontAwesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-50">
-    <!-- Authentication Guard -->
+    <!-- Alpine.js -->
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+    <div class="bg-gray-50 min-h-screen">
+        <!-- Authentication Guard -->
     <div id="authGuard" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
         <div class="bg-white p-8 rounded-lg shadow-xl max-w-md w-full mx-4">
             <div class="text-center mb-6">
@@ -445,5 +440,5 @@
             checkAuth();
         });
     </script>
-</body>
-</html>
+    </div>
+</Layout>
