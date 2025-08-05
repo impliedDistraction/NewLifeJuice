@@ -13,7 +13,7 @@ A modern, responsive website for New Life Juice, featuring a beautiful landing p
 
 ## 🚀 Live Demo
 
-Visit the live site: [https://yourusername.github.io/NewLifeJuice](https://yourusername.github.io/NewLifeJuice)
+Visit the live site: [https://impliedDistraction.github.io/NewLifeJuice](https://impliedDistraction.github.io/NewLifeJuice)
 
 ## 🏗️ Project Structure
 
@@ -47,7 +47,7 @@ NewLifeJuice/
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/NewLifeJuice.git
+git clone https://github.com/impliedDistraction/NewLifeJuice.git
 cd NewLifeJuice
 
 # Enable GitHub Pages
@@ -150,7 +150,7 @@ To add analytics:
 ### GitHub Pages (Automatic)
 1. Push code to `main` branch
 2. Enable GitHub Pages in repository settings
-3. Site will be available at `https://yourusername.github.io/NewLifeJuice`
+3. Site will be available at `https://impliedDistraction.github.io/NewLifeJuice`
 
 ### Custom Domain
 1. Add `CNAME` file with your domain
