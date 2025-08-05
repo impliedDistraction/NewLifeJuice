@@ -1,5 +1,7 @@
 # 🎯## 🎉 **SUPER EASY METHOD - Admin# 🎯 Client Management Guide - New Life Juice Website
 
+# 🎯 Client Management Guide - New Life Juice Website
+
 **Welcome to your new website! This guide will show you how to easily update your products, pricing, and content without any coding knowledge.**
 
 ## 🎉 **SUPER EASY METHOD - Admin Panel**
