@@ -554,7 +554,6 @@ Enter token (or click Cancel to use manual method):`);
         }
 
         function generateConfigObject() {
-        function generateConfigObject() {
             return {
                 business: {
                     name: document.getElementById('business-name').value,
@@ -603,7 +602,6 @@ Enter token (or click Cancel to use manual method):`);
             const config = generateConfigObject();
             const configOutput = document.getElementById('config-output');
             configOutput.textContent = JSON.stringify(config, null, 2);
-        }
         }
 
         function copyConfig() {
