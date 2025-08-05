@@ -1,7 +1,7 @@
 // Serverless function for AI assistance - Deploy to Vercel/Netlify
 export default async function handler(req, res) {
-    // Add CORS headers for GitHub Pages domain
-    res.setHeader('Access-Control-Allow-Origin', 'https://impliedDistraction.github.io');
+    // Add CORS headers for both GitHub Pages and Vercel domains
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
