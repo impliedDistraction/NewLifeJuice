@@ -3,5 +3,8 @@
     "api/ai-assistant.js": {
       "maxDuration": 30
     }
-  }
+  },
+  "buildCommand": "echo 'Static site - no build required'",
+  "outputDirectory": ".",
+  "installCommand": "npm install"
 }
