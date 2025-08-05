@@ -163,6 +163,28 @@
 
             <form class="order-form" action="https://formspree.io/f/xldlpljw" method="POST">
                 <div class="form-section">
+                    <h3 class="form-section-title">Delivery Options</h3>
+                    <div class="delivery-toggle">
+                        <label class="toggle-option">
+                            <input type="radio" name="delivery_method" value="pickup" checked>
+                            <span class="radio-custom"></span>
+                            <div class="option-content">
+                                <strong>🏪 Pickup at Church</strong>
+                                <p>Pick up your fresh juices at our church location</p>
+                            </div>
+                        </label>
+                        <label class="toggle-option">
+                            <input type="radio" name="delivery_method" value="delivery">
+                            <span class="radio-custom"></span>
+                            <div class="option-content">
+                                <strong>🚚 Home Delivery</strong>
+                                <p>We'll deliver fresh juices right to your door</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-section">
                     <h3 class="form-section-title">Select Your Juices</h3>
                     <div class="products-selection">
                         <div class="product-selector">
@@ -208,7 +230,7 @@
                 </div>
 
                 <div class="form-section">
-                    <h3 class="form-section-title">Delivery Information</h3>
+                    <h3 class="form-section-title">Contact Information</h3>
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="first-name">First Name *</label>
@@ -230,14 +252,14 @@
                             <input type="tel" id="phone" name="phone" required>
                         </div>
                         
-                        <div class="form-group full-width">
+                        <div class="form-group full-width delivery-only">
                             <label for="address">Delivery Address *</label>
-                            <textarea id="address" name="address" rows="3" required placeholder="Please include street address, city, state, and ZIP code"></textarea>
+                            <textarea id="address" name="address" rows="3" placeholder="Please include street address, city, state, and ZIP code"></textarea>
                         </div>
                         
                         <div class="form-group full-width">
                             <label for="special-instructions">Special Instructions</label>
-                            <textarea id="special-instructions" name="special_instructions" rows="2" placeholder="Any delivery preferences or dietary notes"></textarea>
+                            <textarea id="special-instructions" name="special_instructions" rows="2" placeholder="Any preferences or dietary notes"></textarea>
                         </div>
                     </div>
                 </div>

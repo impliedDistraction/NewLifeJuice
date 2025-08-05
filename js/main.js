@@ -112,6 +112,7 @@ class NewLifeJuiceApp {
         products.forEach(product => {
             const productCard = document.createElement('div');
             productCard.className = 'product-card';
+            productCard.style.cursor = 'pointer';
             productCard.innerHTML = `
                 <div class="product-image">
                     <img src="${product.image}" alt="${product.name}" loading="lazy">
@@ -120,8 +121,15 @@ class NewLifeJuiceApp {
                     <h3 class="product-name">${product.name}</h3>
                     <p class="product-description">${product.description}</p>
                     <div class="product-price">$${product.price}</div>
+                    <div class="order-hint">Click to order →</div>
                 </div>
             `;
+            
+            // Add click handler to scroll to order form and highlight product
+            productCard.addEventListener('click', () => {
+                this.scrollToOrderAndHighlight(product.id);
+            });
+            
             productsGrid.appendChild(productCard);
         });
     }
@@ -135,6 +143,7 @@ class NewLifeJuiceApp {
         products.forEach(product => {
             const productSelector = document.createElement('div');
             productSelector.className = 'product-selector';
+            productSelector.id = `order-${product.id}`;
             productSelector.innerHTML = `
                 <label for="${product.id}" class="product-label">
                     <span class="product-name">${product.name} - $${product.price}</span>
@@ -143,6 +152,53 @@ class NewLifeJuiceApp {
             `;
             productsSelection.appendChild(productSelector);
         });
+    }
+
+    // Scroll to order form and highlight specific product
+    scrollToOrderAndHighlight(productId) {
+        const orderSection = document.getElementById('order');
+        const targetProduct = document.getElementById(`order-${productId}`);
+        
+        if (orderSection && targetProduct) {
+            // Scroll to order section
+            const headerHeight = document.querySelector('.header').offsetHeight;
+            const targetPosition = orderSection.offsetTop - headerHeight - 20;
+            
+            window.scrollTo({
+                top: targetPosition,
+                behavior: 'smooth'
+            });
+            
+            // Wait for scroll to complete, then highlight
+            setTimeout(() => {
+                this.highlightProduct(targetProduct);
+            }, 800);
+        }
+    }
+
+    // Highlight and blink effect for product
+    highlightProduct(productElement) {
+        // Remove any existing highlights
+        document.querySelectorAll('.product-selector').forEach(el => {
+            el.classList.remove('highlight-product');
+        });
+        
+        // Add highlight class
+        productElement.classList.add('highlight-product');
+        
+        // Remove highlight after animation
+        setTimeout(() => {
+            productElement.classList.remove('highlight-product');
+        }, 3000);
+        
+        // Focus on the quantity input for better UX
+        const quantityInput = productElement.querySelector('.quantity-input');
+        if (quantityInput) {
+            setTimeout(() => {
+                quantityInput.focus();
+                quantityInput.select();
+            }, 1000);
+        }
     }
 
     renderFeatures() {
@@ -232,6 +288,9 @@ class NewLifeJuiceApp {
         const form = document.querySelector('.order-form');
         const orderTotal = document.getElementById('orderTotal');
 
+        // Setup delivery method toggle
+        this.setupDeliveryToggle();
+
         // Calculate total when quantities change
         const calculateTotal = () => {
             let total = 0;
@@ -311,6 +370,45 @@ class NewLifeJuiceApp {
 
             this.showNotification('Order submitted! We\'ll contact you within 24 hours.', 'success');
         });
+    }
+
+    // Setup delivery method toggle
+    setupDeliveryToggle() {
+        const deliveryRadios = document.querySelectorAll('input[name="delivery_method"]');
+        const addressField = document.querySelector('.delivery-only');
+        const addressInput = document.getElementById('address');
+        const formSectionTitle = document.querySelector('.form-section:nth-of-type(3) h3');
+        
+        // Update form based on selected delivery method
+        const updateDeliveryMethod = () => {
+            const selectedMethod = document.querySelector('input[name="delivery_method"]:checked')?.value;
+            
+            if (selectedMethod === 'pickup') {
+                addressField?.classList.add('hidden');
+                if (addressInput) {
+                    addressInput.removeAttribute('required');
+                }
+                if (formSectionTitle) {
+                    formSectionTitle.textContent = 'Contact Information';
+                }
+            } else {
+                addressField?.classList.remove('hidden');
+                if (addressInput) {
+                    addressInput.setAttribute('required', 'required');
+                }
+                if (formSectionTitle) {
+                    formSectionTitle.textContent = 'Contact & Delivery Information';
+                }
+            }
+        };
+
+        // Add event listeners to radio buttons
+        deliveryRadios.forEach(radio => {
+            radio.addEventListener('change', updateDeliveryMethod);
+        });
+
+        // Initial setup
+        updateDeliveryMethod();
     }
 
     // Smooth scrolling for anchor links

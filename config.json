@@ -81,9 +81,10 @@
       "Credit/Debit Cards",
       "PayPal",
       "Venmo",
-      "Cash on Delivery"
+      "Cash on Delivery",
+      "Cash at Pickup"
     ],
-    "contactMessage": "We'll contact you within 24 hours to arrange payment and confirm your delivery schedule. We accept:"
+    "contactMessage": "We'll contact you within 24 hours to arrange payment and confirm your pickup/delivery details. We accept:"
   },
   "social": {
     "facebook": "#",

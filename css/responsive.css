@@ -102,6 +102,11 @@
         grid-template-columns: 1fr;
     }
     
+    .delivery-toggle {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-sm);
+    }
+    
     .product-selector {
         flex-direction: column;
         gap: var(--spacing-sm);
