@@ -118,6 +118,29 @@
         .btn-danger:hover {
             background: #c82333;
         }
+        .save-github-btn {
+            background: var(--primary-green);
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+        .save-github-btn:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        .save-github-btn:hover:before {
+            left: 100%;
+        }
+        .save-github-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
         .config-display {
             background: #f8f9fa;
             border: 1px solid #ddd;
@@ -248,11 +271,14 @@ Cash at Pickup</textarea>
         <div class="admin-section">
             <h2>📄 Generated Configuration</h2>
             <div class="help-text">
-                Copy this entire text and paste it into your <code>config.json</code> file on GitHub:
+                <strong>🎉 Two ways to save your changes:</strong><br>
+                <strong>Option 1 (Recommended):</strong> Click "Save to GitHub" for instant updates<br>
+                <strong>Option 2 (Backup):</strong> Copy config manually if needed
             </div>
             <div id="config-output" class="config-display">
                 Click "Generate Config" to see the configuration...
             </div>
+            <button class="btn-admin save-github-btn" onclick="saveToGitHub()">💾 Save to GitHub (Instant)</button>
             <button class="btn-admin" onclick="generateConfig()">🔄 Generate Config</button>
             <button class="btn-admin" onclick="copyConfig()">📋 Copy to Clipboard</button>
         </div>
@@ -261,6 +287,89 @@ Cash at Pickup</textarea>
     <a href="index.html" class="preview-button">👀 Preview Website</a>
 
     <script>
+        // Security and Configuration
+        const ADMIN_PASSWORD = 'NewLife2025!'; // Change this to your preferred password
+        let GITHUB_TOKEN = null;
+        const REPO_OWNER = 'impliedDistraction';
+        const REPO_NAME = 'NewLifeJuice';
+        
+        // Simple password protection
+        function checkAdminAccess() {
+            const enteredPassword = prompt('🔐 Enter admin password to manage New Life Juice:');
+            if (enteredPassword !== ADMIN_PASSWORD) {
+                alert('❌ Incorrect password. Redirecting to main website...');
+                window.location.href = 'index.html';
+                return false;
+            }
+            return true;
+        }
+
+        // GitHub token management
+        function getGitHubToken() {
+            if (!GITHUB_TOKEN) {
+                GITHUB_TOKEN = prompt(`🔑 Enter your GitHub personal access token for instant saving:
+
+Need a token? Follow these steps:
+1. Go to: https://github.com/settings/tokens
+2. Click "Generate new token (classic)"
+3. Note: "New Life Juice Admin"
+4. Check "repo" permission
+5. Copy the generated token
+
+Enter token (or click Cancel to use manual method):`);
+            }
+            return GITHUB_TOKEN;
+        }
+
+        // GitHub API integration
+        class GitHubManager {
+            constructor(token, owner, repo) {
+                this.token = token;
+                this.owner = owner;
+                this.repo = repo;
+                this.apiBase = 'https://api.github.com';
+            }
+
+            async getFile(path) {
+                try {
+                    const response = await fetch(`${this.apiBase}/repos/${this.owner}/${this.repo}/contents/${path}`, {
+                        headers: {
+                            'Authorization': `token ${this.token}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error fetching file:', error);
+                    return null;
+                }
+            }
+
+            async updateFile(path, content, message, sha) {
+                try {
+                    const response = await fetch(`${this.apiBase}/repos/${this.owner}/${this.repo}/contents/${path}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${this.token}`,
+                            'Accept': 'application/vnd.github.v3+json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            message: message,
+                            content: btoa(unescape(encodeURIComponent(content))), // Base64 encode
+                            sha: sha
+                        })
+                    });
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return await response.json();
+                } catch (error) {
+                    console.error('Error updating file:', error);
+                    throw error;
+                }
+            }
+        }
+
         let products = [
             {
                 id: "green-detox",
@@ -394,8 +503,59 @@ Cash at Pickup</textarea>
             products[index][field] = value;
         }
 
-        function generateConfig() {
-            const config = {
+        async function saveToGitHub() {
+            const token = getGitHubToken();
+            if (!token) {
+                alert('ℹ️ No GitHub token provided. You can still use the manual copy method below.');
+                return;
+            }
+
+            const saveButton = document.querySelector('.save-github-btn');
+            const originalText = saveButton.textContent;
+            saveButton.textContent = '💾 Saving to GitHub...';
+            saveButton.disabled = true;
+
+            try {
+                const github = new GitHubManager(token, REPO_OWNER, REPO_NAME);
+                
+                // Generate the new config
+                const config = generateConfigObject();
+                const configContent = JSON.stringify(config, null, 2);
+                
+                // Get current file to get SHA
+                const currentFile = await github.getFile('config.json');
+                if (!currentFile) {
+                    throw new Error('Could not fetch current config.json');
+                }
+                
+                // Update the file
+                const result = await github.updateFile(
+                    'config.json',
+                    configContent,
+                    `Update products and settings via admin panel - ${new Date().toLocaleString()}`,
+                    currentFile.sha
+                );
+                
+                if (result) {
+                    alert('✅ Success! Your changes have been saved to GitHub and your website will update within 1-2 minutes.');
+                    // Update the config display
+                    document.getElementById('config-output').textContent = configContent;
+                } else {
+                    throw new Error('Failed to save to GitHub');
+                }
+                
+            } catch (error) {
+                console.error('Save error:', error);
+                alert(`❌ Error saving to GitHub: ${error.message}\n\nPlease check your token and try again, or use the manual copy method below.`);
+            } finally {
+                saveButton.textContent = originalText;
+                saveButton.disabled = false;
+            }
+        }
+
+        function generateConfigObject() {
+        function generateConfigObject() {
+            return {
                 business: {
                     name: document.getElementById('business-name').value,
                     tagline: document.getElementById('business-tagline').value,
@@ -437,9 +597,13 @@ Cash at Pickup</textarea>
                     twitter: "#"
                 }
             };
+        }
 
+        function generateConfig() {
+            const config = generateConfigObject();
             const configOutput = document.getElementById('config-output');
             configOutput.textContent = JSON.stringify(config, null, 2);
+        }
         }
 
         function copyConfig() {
@@ -449,9 +613,11 @@ Cash at Pickup</textarea>
             });
         }
 
-        // Initialize
-        renderProducts();
-        generateConfig();
+        // Initialize with security check
+        if (checkAdminAccess()) {
+            renderProducts();
+            generateConfig();
+        }
     </script>
 </body>
 </html>
