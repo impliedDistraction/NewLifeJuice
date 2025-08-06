@@ -110,7 +110,7 @@ import Layout from '../../layouts/Layout.astro';
         </header>
 
         <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="dashboardData()">
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="window.dashboardData()">
             <!-- Quick Stats -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-lg border border-green-200 hover:shadow-xl transition-all duration-300">
@@ -315,8 +315,8 @@ import Layout from '../../layouts/Layout.astro';
     </div>
 
     <script>
-        // Alpine.js data
-        function dashboardData() {
+        // Alpine.js data - Define in global scope for static builds
+        window.dashboardData = function() {
             return {
                 contentType: 'product-description',
                 prompt: '',
@@ -379,11 +379,13 @@ import Layout from '../../layouts/Layout.astro';
             }
         }
         
-        // Authentication functions
-        async function authenticate() {
+        // Authentication functions - Global scope
+        window.authenticate = async function() {
             const form = document.getElementById('authForm');
             const passwordInput = document.getElementById('adminPassword');
             const errorDiv = document.getElementById('authError');
+            
+            if (!form) return; // Prevent errors if elements don't exist yet
             
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -419,25 +421,32 @@ import Layout from '../../layouts/Layout.astro';
             });
         }
         
-        function logout() {
+        window.logout = function() {
             localStorage.removeItem('adminPassword');
             location.reload();
         }
         
         // Check if already authenticated
-        function checkAuth() {
+        window.checkAuth = function() {
             const savedPassword = localStorage.getItem('adminPassword');
             if (savedPassword) {
                 // Auto-login if password is saved
-                document.getElementById('adminPassword').value = savedPassword;
-                document.getElementById('authForm').dispatchEvent(new Event('submit'));
+                const passwordInput = document.getElementById('adminPassword');
+                const authForm = document.getElementById('authForm');
+                if (passwordInput && authForm) {
+                    passwordInput.value = savedPassword;
+                    authForm.dispatchEvent(new Event('submit'));
+                }
             }
         }
         
-        // Initialize
+        // Initialize when DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
-            authenticate();
-            checkAuth();
+            // Wait a bit for Alpine to initialize
+            setTimeout(() => {
+                authenticate();
+                checkAuth();
+            }, 100);
         });
     </script>
     </div>
