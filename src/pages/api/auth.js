@@ -5,13 +5,33 @@ import { supabase } from '../../lib/supabase.js';
 
 // Check if Supabase is properly configured
 const isSupabaseConfigured = () => {
-    const url = import.meta.env.SUPABASE_URL || process.env.SUPABASE_URL;
-    const key = import.meta.env.SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+    const url = import.meta.env?.SUPABASE_URL || process.env?.SUPABASE_URL;
+    const key = import.meta.env?.SUPABASE_ANON_KEY || process.env?.SUPABASE_ANON_KEY;
+    
+    if (!url || !key) {
+        console.error('Missing Supabase environment variables:', {
+            SUPABASE_URL: !!url,
+            SUPABASE_ANON_KEY: !!key
+        });
+        return false;
+    }
+    
     return url && url !== 'https://placeholder.supabase.co' && key && key !== 'placeholder-key';
 };
 
 export async function POST({ request }) {
     try {
+        // Skip Supabase operations during build time
+        if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production' && !isSupabaseConfigured()) {
+            return new Response(JSON.stringify({ 
+                error: 'Authentication service not available during build',
+                message: 'This endpoint requires runtime environment variables' 
+            }), { 
+                status: 503,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
         // Check if Supabase is configured
         if (!isSupabaseConfigured()) {
             return new Response(JSON.stringify({ 

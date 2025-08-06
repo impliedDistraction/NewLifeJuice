@@ -3,17 +3,28 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-// Initialize Supabase client with safe fallbacks
-const supabaseUrl = import.meta.env.SUPABASE_URL || process.env.SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = import.meta.env.SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || 'placeholder-key'
+// Environment variable validation
+const getEnvVar = (key, fallback = '') => {
+    // Check both import.meta.env (Vite) and process.env (Node.js)
+    return import.meta.env?.[key] || process.env?.[key] || fallback;
+};
 
-// Only warn about missing variables if not using placeholders
-if (supabaseUrl === 'https://placeholder.supabase.co' || supabaseAnonKey === 'placeholder-key') {
-    if (typeof window !== 'undefined') { // Only log in browser, not during build
-        console.warn('Supabase not configured - using placeholder values')
-    }
+// Get environment variables with validation
+const supabaseUrl = getEnvVar('SUPABASE_URL', 'https://placeholder.supabase.co');
+const supabaseAnonKey = getEnvVar('SUPABASE_ANON_KEY', 'placeholder-key');
+
+// Validate environment variables
+const isConfigured = supabaseUrl !== 'https://placeholder.supabase.co' && supabaseAnonKey !== 'placeholder-key';
+
+// Only log warnings in development or browser context
+if (!isConfigured && typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
+    console.warn('Missing Supabase environment variables:', {
+        hasUrl: supabaseUrl !== 'https://placeholder.supabase.co',
+        hasKey: supabaseAnonKey !== 'placeholder-key'
+    });
 }
 
+// Create Supabase client (will work with placeholder values during build)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
         autoRefreshToken: true,
