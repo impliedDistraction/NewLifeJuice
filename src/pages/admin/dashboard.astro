@@ -110,7 +110,7 @@ import Layout from '../../layouts/Layout.astro';
         </header>
 
         <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="window.dashboardData()">
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="window.dashboardData()" x-init="init()">>
             <!-- Quick Stats -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                 <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-lg border border-green-200 hover:shadow-xl transition-all duration-300">
@@ -174,6 +174,21 @@ import Layout from '../../layouts/Layout.astro';
                     </h3>
                     
                     <form @submit.prevent="generateContent()" class="space-y-4">
+                        <!-- Quick Prompts -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Quick Prompts</label>
+                            <div class="grid grid-cols-1 gap-2">
+                                <template x-for="promptObj in quickPrompts" :key="promptObj.text">
+                                    <button 
+                                        type="button"
+                                        @click="useQuickPrompt(promptObj)"
+                                        class="text-left p-2 text-xs bg-gray-50 hover:bg-purple-50 rounded border hover:border-purple-200 transition-colors"
+                                        x-text="promptObj.text"
+                                    ></button>
+                                </template>
+                            </div>
+                        </div>
+                        
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">Content Type</label>
                             <select 
@@ -219,35 +234,126 @@ import Layout from '../../layouts/Layout.astro';
                             <i class="fas fa-sparkles text-purple-600 mr-2"></i>
                             Generated Content:
                         </h4>
-                        <div class="bg-white p-4 rounded-lg border border-gray-200 max-h-48 overflow-y-auto">
+                        <div class="bg-white p-4 rounded-lg border border-gray-200 max-h-48 overflow-y-auto mb-4">
                             <p x-text="generatedContent" class="text-gray-700 whitespace-pre-wrap leading-relaxed"></p>
                         </div>
-                        <button 
-                            @click="copyToClipboard(generatedContent)"
-                            class="mt-4 bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-3 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 font-semibold shadow-lg"
-                        >
-                            <i class="fas fa-copy mr-2"></i>
-                            Copy to Clipboard
-                        </button>
+                        
+                        <!-- Action buttons -->
+                        <div class="flex flex-wrap gap-2">
+                            <button 
+                                @click="copyToClipboard(generatedContent)"
+                                class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 font-semibold shadow-lg text-sm"
+                            >
+                                <i class="fas fa-copy mr-1"></i>
+                                Copy to Clipboard
+                            </button>
+                            
+                            <button 
+                                @click="markAsUsed(generationHistory[0])"
+                                x-show="generationHistory.length > 0"
+                                class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold shadow-lg text-sm"
+                            >
+                                <i class="fas fa-check mr-1"></i>
+                                Mark as Used
+                            </button>
+                            
+                            <button 
+                                @click="prompt = ''; generatedContent = ''"
+                                class="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-4 py-2 rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-200 font-semibold shadow-lg text-sm"
+                            >
+                                <i class="fas fa-refresh mr-1"></i>
+                                New Generation
+                            </button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Quick Actions -->
+                <!-- AI Generation History -->
                 <div class="bg-gradient-to-br from-white to-orange-50 p-8 rounded-xl shadow-xl border border-orange-100 hover:shadow-2xl transition-all duration-300">
-                    <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
-                        <div class="p-2 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-lg mr-3">
-                            <i class="fas fa-bolt text-white"></i>
-                        </div>
-                        Quick Actions
-                    </h3>
-                    
-                    <div class="grid grid-cols-2 gap-4">
-                        <button class="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors text-center">
-                            <i class="fas fa-plus-circle text-green-600 text-2xl mb-2"></i>
-                            <p class="text-sm font-medium text-green-800">Add Product</p>
-                        </button>
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-gray-900 flex items-center">
+                            <div class="p-2 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-lg mr-3">
+                                <i class="fas fa-history text-white"></i>
+                            </div>
+                            Generation History
+                            <span class="ml-2 px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full" x-text="generationHistory.length"></span>
+                        </h3>
                         
-                        <button class="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-center">
+                        <div class="flex space-x-2">
+                            <button 
+                                @click="toggleGenerationHistory()"
+                                class="bg-orange-500 text-white px-3 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm"
+                            >
+                                <i class="fas fa-list mr-1"></i>
+                                <span x-text="showGenerationHistory ? 'Hide' : 'Show'"></span>
+                            </button>
+                            
+                            <button 
+                                @click="clearHistory()"
+                                x-show="generationHistory.length > 0"
+                                class="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm"
+                            >
+                                <i class="fas fa-trash mr-1"></i>
+                                Clear
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- History List -->
+                    <div x-show="showGenerationHistory" class="space-y-3 max-h-64 overflow-y-auto">
+                        <template x-for="generation in generationHistory" :key="generation.id">
+                            <div class="bg-white p-4 rounded-lg border shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <span 
+                                            class="px-2 py-1 text-xs rounded-full font-medium"
+                                            :class="getContentTypeBadge(generation.type)"
+                                            x-text="generation.type.replace('-', ' ').toUpperCase()"
+                                        ></span>
+                                        <span 
+                                            x-show="generation.used"
+                                            class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 font-medium"
+                                        >
+                                            USED
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="flex space-x-1">
+                                        <button 
+                                            @click="selectGeneration(generation)"
+                                            class="text-blue-600 hover:text-blue-800 p-1"
+                                            title="View Details"
+                                        >
+                                            <i class="fas fa-eye text-sm"></i>
+                                        </button>
+                                        <button 
+                                            @click="copyToClipboard(generation.content)"
+                                            class="text-green-600 hover:text-green-800 p-1"
+                                            title="Copy Content"
+                                        >
+                                            <i class="fas fa-copy text-sm"></i>
+                                        </button>
+                                        <button 
+                                            @click="deleteGeneration(generation.id)"
+                                            class="text-red-600 hover:text-red-800 p-1"
+                                            title="Delete"
+                                        >
+                                            <i class="fas fa-trash text-sm"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <p class="text-sm text-gray-600 mb-2 font-medium" x-text="generation.prompt"></p>
+                                <p class="text-xs text-gray-500" x-text="formatDate(generation.timestamp)"></p>
+                            </div>
+                        </template>
+                        
+                        <div x-show="generationHistory.length === 0" class="text-center py-8 text-gray-500">
+                            <i class="fas fa-robot text-3xl mb-2"></i>
+                            <p>No AI generations yet. Create your first one!</p>
+                        </div>
+                    </div>
+                </div>
                             <i class="fas fa-images text-blue-600 text-2xl mb-2"></i>
                             <p class="text-sm font-medium text-blue-800">Manage Images</p>
                         </button>
@@ -312,6 +418,112 @@ import Layout from '../../layouts/Layout.astro';
                 </div>
             </div>
         </main>
+        
+        <!-- Generation Details Modal -->
+        <div 
+            x-show="selectedGeneration" 
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4"
+            @click.self="selectedGeneration = null"
+        >
+            <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+                <!-- Modal Header -->
+                <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-bold flex items-center">
+                            <i class="fas fa-robot mr-2"></i>
+                            AI Generation Details
+                        </h3>
+                        <button 
+                            @click="selectedGeneration = null"
+                            class="text-white hover:text-gray-300 text-xl"
+                        >
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Modal Content -->
+                <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                    <template x-if="selectedGeneration">
+                        <div class="space-y-4">
+                            <!-- Generation Info -->
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span 
+                                    class="px-3 py-1 text-sm rounded-full font-medium"
+                                    :class="getContentTypeBadge(selectedGeneration.type)"
+                                    x-text="selectedGeneration.type.replace('-', ' ').toUpperCase()"
+                                ></span>
+                                <span 
+                                    x-show="selectedGeneration.used"
+                                    class="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800 font-medium"
+                                >
+                                    USED
+                                </span>
+                                <span class="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-800 font-medium" x-text="formatDate(selectedGeneration.timestamp)"></span>
+                            </div>
+                            
+                            <!-- Original Prompt -->
+                            <div>
+                                <h4 class="font-semibold text-gray-800 mb-2">Original Prompt:</h4>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <p class="text-gray-700" x-text="selectedGeneration.prompt"></p>
+                                </div>
+                            </div>
+                            
+                            <!-- Generated Content -->
+                            <div>
+                                <h4 class="font-semibold text-gray-800 mb-2">Generated Content:</h4>
+                                <div class="bg-white border border-gray-200 p-4 rounded-lg max-h-64 overflow-y-auto">
+                                    <p class="text-gray-700 whitespace-pre-wrap leading-relaxed" x-text="selectedGeneration.content"></p>
+                                </div>
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="flex flex-wrap gap-2 pt-4 border-t">
+                                <button 
+                                    @click="copyToClipboard(selectedGeneration.content)"
+                                    class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                                >
+                                    <i class="fas fa-copy mr-1"></i>
+                                    Copy Content
+                                </button>
+                                
+                                <button 
+                                    @click="markAsUsed(selectedGeneration)"
+                                    x-show="!selectedGeneration.used"
+                                    class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                                >
+                                    <i class="fas fa-check mr-1"></i>
+                                    Mark as Used
+                                </button>
+                                
+                                <button 
+                                    @click="deleteGeneration(selectedGeneration.id)"
+                                    class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
+                                >
+                                    <i class="fas fa-trash mr-1"></i>
+                                    Delete
+                                </button>
+                                
+                                <button 
+                                    @click="prompt = selectedGeneration.prompt; contentType = selectedGeneration.type; selectedGeneration = null"
+                                    class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors"
+                                >
+                                    <i class="fas fa-redo mr-1"></i>
+                                    Regenerate
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -322,14 +534,49 @@ import Layout from '../../layouts/Layout.astro';
                 prompt: '',
                 generatedContent: '',
                 generating: false,
+                showGenerationHistory: false,
+                generationHistory: JSON.parse(localStorage.getItem('aiGenerationHistory') || '[]'),
+                selectedGeneration: null,
                 stats: {
                     ordersToday: 12,
-                    aiGenerations: 47,
+                    aiGenerations: JSON.parse(localStorage.getItem('aiGenerationHistory') || '[]').length,
                     pageViews: 1234,
                     revenue: 2856
                 },
                 
+                // Quick prompts for common use cases
+                quickPrompts: [
+                    { type: 'product-description', text: 'Write a compelling product description for a healthy green juice blend' },
+                    { type: 'marketing-copy', text: 'Create catchy hero section copy for a premium juice delivery service' },
+                    { type: 'social-media', text: 'Write an engaging Instagram post about the benefits of cold-pressed juice' },
+                    { type: 'email-campaign', text: 'Create a welcome email for new juice subscription customers' },
+                    { type: 'blog-post', text: 'Write an introduction for a blog post about juice cleansing benefits' }
+                ],
+                
+                // Initialize component
+                init() {
+                    this.stats.aiGenerations = this.generationHistory.length;
+                },
+                
+                // Use quick prompt
+                useQuickPrompt(promptObj) {
+                    this.contentType = promptObj.type;
+                    this.prompt = promptObj.text;
+                },
+                
+                // Sanitize HTML content to prevent XSS
+                sanitizeContent(content) {
+                    const div = document.createElement('div');
+                    div.textContent = content;
+                    return div.innerHTML;
+                },
+                
                 async generateContent() {
+                    if (!this.prompt.trim()) {
+                        alert('Please enter a prompt');
+                        return;
+                    }
+                    
                     this.generating = true;
                     this.generatedContent = '';
                     
@@ -349,8 +596,24 @@ import Layout from '../../layouts/Layout.astro';
                         const data = await response.json();
                         
                         if (response.ok) {
-                            this.generatedContent = data.suggestion;
-                            this.stats.aiGenerations++;
+                            const sanitizedContent = this.sanitizeContent(data.suggestion);
+                            this.generatedContent = data.suggestion; // Keep original for display
+                            
+                            // Save to history
+                            const generation = {
+                                id: Date.now(),
+                                prompt: this.prompt,
+                                type: this.contentType,
+                                content: data.suggestion,
+                                sanitizedContent: sanitizedContent,
+                                timestamp: new Date().toISOString(),
+                                used: false
+                            };
+                            
+                            this.generationHistory.unshift(generation);
+                            localStorage.setItem('aiGenerationHistory', JSON.stringify(this.generationHistory));
+                            this.stats.aiGenerations = this.generationHistory.length;
+                            
                         } else {
                             alert('Error generating content: ' + data.error);
                         }
@@ -360,6 +623,76 @@ import Layout from '../../layouts/Layout.astro';
                     } finally {
                         this.generating = false;
                     }
+                },
+                
+                // Show generation history
+                toggleGenerationHistory() {
+                    this.showGenerationHistory = !this.showGenerationHistory;
+                },
+                
+                // Select a generation for detailed view
+                selectGeneration(generation) {
+                    this.selectedGeneration = generation;
+                },
+                
+                // Mark generation as used
+                markAsUsed(generation) {
+                    generation.used = true;
+                    localStorage.setItem('aiGenerationHistory', JSON.stringify(this.generationHistory));
+                    this.showSuccessToast('Marked as used!');
+                },
+                
+                // Delete a generation
+                deleteGeneration(generationId) {
+                    if (confirm('Are you sure you want to delete this generation?')) {
+                        this.generationHistory = this.generationHistory.filter(g => g.id !== generationId);
+                        localStorage.setItem('aiGenerationHistory', JSON.stringify(this.generationHistory));
+                        this.stats.aiGenerations = this.generationHistory.length;
+                        this.selectedGeneration = null;
+                        this.showSuccessToast('Generation deleted!');
+                    }
+                },
+                
+                // Clear all history
+                clearHistory() {
+                    if (confirm('Are you sure you want to clear all generation history?')) {
+                        this.generationHistory = [];
+                        localStorage.removeItem('aiGenerationHistory');
+                        this.stats.aiGenerations = 0;
+                        this.selectedGeneration = null;
+                        this.showGenerationHistory = false;
+                        this.showSuccessToast('History cleared!');
+                    }
+                },
+                
+                // Format date for display
+                formatDate(isoString) {
+                    return new Date(isoString).toLocaleString();
+                },
+                
+                // Get content type badge color
+                getContentTypeBadge(type) {
+                    const badges = {
+                        'product-description': 'bg-green-100 text-green-800',
+                        'marketing-copy': 'bg-blue-100 text-blue-800',
+                        'social-media': 'bg-purple-100 text-purple-800',
+                        'blog-post': 'bg-yellow-100 text-yellow-800',
+                        'email-campaign': 'bg-red-100 text-red-800'
+                    };
+                    return badges[type] || 'bg-gray-100 text-gray-800';
+                },
+                
+                // Show success toast
+                showSuccessToast(message) {
+                    // Create and show a temporary toast notification
+                    const toast = document.createElement('div');
+                    toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                    toast.innerHTML = `<i class="fas fa-check mr-2"></i>${message}`;
+                    document.body.appendChild(toast);
+                    
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 3000);
                 },
                 
                 copyToClipboard(text) {
