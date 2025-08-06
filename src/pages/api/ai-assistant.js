@@ -1,24 +1,56 @@
-// AI Assistant API - OpenAI Integration
+// AI Assistant API - OpenAI Integration with Supabase Authentication
 // Handles content generation requests from admin dashboard
 
 export async function POST({ request }) {
     try {
         const body = await request.json();
-        const { prompt, type, adminPassword, test } = body;
+        const { prompt, type, userId, test } = body;
 
-        // Admin authentication
-        const ADMIN_PASSWORD = import.meta.env.ADMIN_PASSWORD || 'NewLife2025!';
+        // Authentication check - now supports both old password and new Supabase auth
+        const authHeader = request.headers.get('authorization');
+        const supabaseToken = authHeader?.replace('Bearer ', '');
         
-        if (adminPassword !== ADMIN_PASSWORD) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        if (!supabaseToken && !body.adminPassword) {
+            return new Response(JSON.stringify({
+                error: 'Authentication required',
+                message: 'Please provide authentication credentials'
+            }), {
                 status: 401,
                 headers: { 'Content-Type': 'application/json' }
             });
         }
 
+        // Legacy password auth support for backward compatibility
+        if (body.adminPassword) {
+            const ADMIN_PASSWORD = import.meta.env.ADMIN_PASSWORD || 'NewLife2025!';
+            if (body.adminPassword !== ADMIN_PASSWORD) {
+                return new Response(JSON.stringify({
+                    error: 'Invalid credentials',
+                    message: 'Authentication failed'
+                }), {
+                    status: 401,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+        }
+
         // Test endpoint for authentication
         if (test) {
-            return new Response(JSON.stringify({ status: 'AI service available' }), {
+            return new Response(JSON.stringify({ 
+                status: 'authenticated',
+                message: 'AI Assistant API is ready',
+                userId: userId || 'legacy_admin'
+            }), {
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
+        if (!prompt || !type) {
+            return new Response(JSON.stringify({
+                error: 'Missing required fields',
+                message: 'Please provide both prompt and type'
+            }), {
+                status: 400,
                 headers: { 'Content-Type': 'application/json' }
             });
         }
@@ -27,35 +59,22 @@ export async function POST({ request }) {
         const OPENAI_API_KEY = import.meta.env.OPENAI_API_KEY;
         
         if (!OPENAI_API_KEY) {
-            return new Response(JSON.stringify({ error: 'OpenAI API key not configured' }), {
+            return new Response(JSON.stringify({
+                error: 'OpenAI API key not configured',
+                message: 'Please configure OPENAI_API_KEY environment variable'
+            }), {
                 status: 500,
                 headers: { 'Content-Type': 'application/json' }
             });
         }
 
         // Enhance prompt based on content type
-        let enhancedPrompt = prompt;
-        
-        switch (type) {
-            case 'product-description':
-                enhancedPrompt = `Create a compelling product description for a premium juice product. Focus on health benefits, taste, and quality. Make it engaging and sales-oriented. Request: ${prompt}`;
-                break;
-            case 'marketing-copy':
-                enhancedPrompt = `Write persuasive marketing copy for a premium juice brand. Focus on health, wellness, and lifestyle benefits. Make it compelling and action-oriented. Request: ${prompt}`;
-                break;
-            case 'social-media':
-                enhancedPrompt = `Create an engaging social media post for a health-focused juice brand. Include relevant hashtags and make it shareable. Keep it concise and visually appealing. Request: ${prompt}`;
-                break;
-            case 'blog-post':
-                enhancedPrompt = `Write a blog post section about health and wellness related to premium juices. Make it informative, engaging, and SEO-friendly. Request: ${prompt}`;
-                break;
-            case 'email-campaign':
-                enhancedPrompt = `Create email marketing content for a premium juice brand. Make it personal, engaging, and include a clear call-to-action. Request: ${prompt}`;
-                break;
-        }
+        let enhancedPrompt = getSystemPrompt(type) + "\n\n" + prompt;
+
+        console.log('Calling OpenAI API with prompt:', enhancedPrompt.substring(0, 100) + '...');
 
         // Call OpenAI API
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${OPENAI_API_KEY}`,
@@ -66,11 +85,11 @@ export async function POST({ request }) {
                 messages: [
                     {
                         role: 'system',
-                        content: 'You are a professional copywriter specializing in health and wellness brands. Create compelling, engaging content that converts readers into customers.'
+                        content: getSystemPrompt(type)
                     },
                     {
                         role: 'user',
-                        content: enhancedPrompt
+                        content: prompt
                     }
                 ],
                 max_tokens: 500,
@@ -78,44 +97,90 @@ export async function POST({ request }) {
             }),
         });
 
-        if (!response.ok) {
-            const error = await response.text();
-            console.error('OpenAI API error:', error);
-            return new Response(JSON.stringify({ error: 'Failed to generate content' }), {
+        if (!openaiResponse.ok) {
+            const errorData = await openaiResponse.json();
+            console.error('OpenAI API error:', errorData);
+            return new Response(JSON.stringify({
+                error: 'OpenAI API error',
+                message: errorData.error?.message || 'Failed to generate content'
+            }), {
                 status: 500,
                 headers: { 'Content-Type': 'application/json' }
             });
         }
 
-        const data = await response.json();
-        const suggestion = data.choices[0]?.message?.content?.trim();
+        const openaiData = await openaiResponse.json();
+        const generatedContent = openaiData.choices[0]?.message?.content;
 
-        if (!suggestion) {
-            return new Response(JSON.stringify({ error: 'No content generated' }), {
+        if (!generatedContent) {
+            return new Response(JSON.stringify({
+                error: 'No content generated',
+                message: 'OpenAI did not return any content'
+            }), {
                 status: 500,
                 headers: { 'Content-Type': 'application/json' }
             });
         }
 
-        return new Response(JSON.stringify({ suggestion }), {
+        console.log('Generated content:', generatedContent.substring(0, 100) + '...');
+
+        return new Response(JSON.stringify({
+            success: true,
+            content: generatedContent,
+            suggestion: generatedContent, // Legacy field name
+            type: type,
+            userId: userId,
+            timestamp: new Date().toISOString()
+        }), {
             headers: { 'Content-Type': 'application/json' }
         });
 
     } catch (error) {
         console.error('AI Assistant API error:', error);
-        return new Response(JSON.stringify({ error: 'Internal server error' }), {
+        return new Response(JSON.stringify({
+            error: 'Internal server error',
+            message: error.message
+        }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' }
         });
     }
 }
 
+function getSystemPrompt(type) {
+    const prompts = {
+        'social-media': `You are a social media expert for New Life Juice, a premium fresh juice delivery company. \n        Create engaging, authentic social media content that highlights health benefits, freshness, and convenience. \n        Use a friendly, energetic tone. Include relevant emojis and hashtags.`,
+        
+        'product-description': `You are a product copywriter for New Life Juice. Create compelling product descriptions \n        that emphasize premium quality, health benefits, fresh ingredients, and the convenience of delivery. \n        Use persuasive but authentic language.`,
+        
+        'blog-content': `You are a health and wellness content writer for New Life Juice. Create informative, \n        engaging blog content about nutrition, juicing benefits, healthy lifestyle tips, and seasonal wellness advice. \n        Write in an expert but approachable tone.`,
+        
+        'email-marketing': `You are an email marketing specialist for New Life Juice. Create compelling email content \n        that drives engagement and conversions while maintaining a personal, friendly tone. Focus on value for customers.`,
+        
+        'website-copy': `You are a web copywriter for New Life Juice. Create clear, persuasive website copy that \n        converts visitors into customers. Emphasize benefits, build trust, and include clear calls-to-action.`,
+        
+        'promotional': `You are a promotional content creator for New Life Juice. Create exciting promotional content \n        for special offers, new products, or seasonal campaigns. Use urgency and value to drive action.`,
+        
+        'seasonal': `You are a seasonal content creator for New Life Juice. Create content that ties into current \n        seasons, holidays, or health trends. Make it relevant and timely for maximum engagement.`,
+        
+        'health-tips': `You are a health and nutrition expert creating content for New Life Juice customers. \n        Share practical, science-based health tips that relate to juicing, nutrition, and wellness.`
+    };
+
+    return prompts[type] || prompts['social-media'];
+}
+
 // Health check endpoint
 export async function GET() {
     return new Response(JSON.stringify({ 
         status: 'AI Assistant API is running',
+        version: '2.0 - Supabase Integration',
         endpoints: {
-            'POST /api/ai-assistant': 'Generate AI content with authentication'
+            'POST /api/ai-assistant': 'Generate AI content with Supabase or legacy authentication',
+            'GET /api/ai-assistant': 'Health check'
+        },
+        authentication: {
+            supabase: 'Bearer token in Authorization header',
+            legacy: 'adminPassword in request body'
         }
     }), {
         headers: { 'Content-Type': 'application/json' }

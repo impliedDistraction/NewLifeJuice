@@ -4,11 +4,10 @@
 		{
 			"label": "Serve Locally",
 			"type": "shell",
-			"command": "python3",
+			"command": "npm",
 			"args": [
-				"-m",
-				"http.server",
-				"8000"
+				"run",
+				"dev"
 			],
 			"group": "build",
 			"isBackground": true,
