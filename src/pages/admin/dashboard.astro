@@ -433,40 +433,24 @@ import Layout from '../../layouts/Layout.astro';
         window.checkAuth = async function() {
             const savedPassword = localStorage.getItem('adminPassword');
             if (savedPassword) {
-                try {
-                    // Test the saved password without triggering form submission
-                    const response = await fetch('/api/ai-assistant', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            test: true,
-                            adminPassword: savedPassword
-                        })
-                    });
-                    
-                    if (response.ok) {
-                        // Password is still valid, show dashboard directly
-                        document.getElementById('authGuard').style.display = 'none';
-                        document.getElementById('dashboard').classList.remove('hidden');
-                    } else {
-                        // Saved password is invalid, clear it
-                        localStorage.removeItem('adminPassword');
-                    }
-                } catch (error) {
-                    // Error checking password, clear it
-                    localStorage.removeItem('adminPassword');
-                }
+                // Don't test the password with API call on every load
+                // Just show the dashboard if password exists
+                document.getElementById('authGuard').style.display = 'none';
+                document.getElementById('dashboard').classList.remove('hidden');
+                return true;
             }
+            return false;
         }
         
         // Initialize when DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
-            // Initialize authentication once
-            authenticate();
-            // Check if user is already authenticated
-            checkAuth();
+            // Check if user is already authenticated first
+            const isAuthenticated = checkAuth();
+            
+            // Only initialize authentication form if not already authenticated
+            if (!isAuthenticated) {
+                authenticate();
+            }
         });
     </script>
     </div>
