@@ -3,8 +3,26 @@
 
 import { supabase } from '../../lib/supabase.js';
 
+// Check if Supabase is properly configured
+const isSupabaseConfigured = () => {
+    const url = import.meta.env.SUPABASE_URL || process.env.SUPABASE_URL;
+    const key = import.meta.env.SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+    return url && url !== 'https://placeholder.supabase.co' && key && key !== 'placeholder-key';
+};
+
 export async function POST({ request }) {
     try {
+        // Check if Supabase is configured
+        if (!isSupabaseConfigured()) {
+            return new Response(JSON.stringify({ 
+                error: 'Authentication service not configured',
+                message: 'Supabase environment variables are missing' 
+            }), { 
+                status: 503,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+
         const body = await request.json();
         const { action, email, password, firstName, lastName, role = 'admin' } = body;
 
@@ -296,13 +314,16 @@ async function handleRefreshSession(refreshToken) {
 
 // Health check endpoint
 export async function GET() {
+    const configured = isSupabaseConfigured();
+    
     return new Response(JSON.stringify({ 
         status: 'Supabase Authentication API is running',
+        configured: configured,
         endpoints: {
             'POST /api/auth': 'Authentication operations',
             'actions': ['register', 'login', 'logout', 'getUser', 'refreshSession']
         },
-        supabaseConnected: !!supabase
+        supabaseConnected: configured ? !!supabase : false
     }), {
         headers: { 'Content-Type': 'application/json' }
     });
