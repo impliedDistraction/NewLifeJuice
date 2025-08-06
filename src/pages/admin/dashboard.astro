@@ -385,7 +385,9 @@ import Layout from '../../layouts/Layout.astro';
             const passwordInput = document.getElementById('adminPassword');
             const errorDiv = document.getElementById('authError');
             
-            if (!form) return; // Prevent errors if elements don't exist yet
+            if (!form || form.hasListener) return; // Prevent multiple listeners
+            
+            form.hasListener = true; // Mark that listener is attached
             
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -410,6 +412,7 @@ import Layout from '../../layouts/Layout.astro';
                         localStorage.setItem('adminPassword', password);
                         document.getElementById('authGuard').style.display = 'none';
                         document.getElementById('dashboard').classList.remove('hidden');
+                        errorDiv.classList.add('hidden');
                     } else {
                         throw new Error('Invalid password');
                     }
@@ -427,26 +430,43 @@ import Layout from '../../layouts/Layout.astro';
         }
         
         // Check if already authenticated
-        window.checkAuth = function() {
+        window.checkAuth = async function() {
             const savedPassword = localStorage.getItem('adminPassword');
             if (savedPassword) {
-                // Auto-login if password is saved
-                const passwordInput = document.getElementById('adminPassword');
-                const authForm = document.getElementById('authForm');
-                if (passwordInput && authForm) {
-                    passwordInput.value = savedPassword;
-                    authForm.dispatchEvent(new Event('submit'));
+                try {
+                    // Test the saved password without triggering form submission
+                    const response = await fetch('/api/ai-assistant', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            test: true,
+                            adminPassword: savedPassword
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        // Password is still valid, show dashboard directly
+                        document.getElementById('authGuard').style.display = 'none';
+                        document.getElementById('dashboard').classList.remove('hidden');
+                    } else {
+                        // Saved password is invalid, clear it
+                        localStorage.removeItem('adminPassword');
+                    }
+                } catch (error) {
+                    // Error checking password, clear it
+                    localStorage.removeItem('adminPassword');
                 }
             }
         }
         
         // Initialize when DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
-            // Wait a bit for Alpine to initialize
-            setTimeout(() => {
-                authenticate();
-                checkAuth();
-            }, 100);
+            // Initialize authentication once
+            authenticate();
+            // Check if user is already authenticated
+            checkAuth();
         });
     </script>
     </div>
