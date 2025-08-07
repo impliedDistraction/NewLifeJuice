@@ -1,116 +1,155 @@
-// Dynamic Product Catalog API
-// Handles product CRUD operations with AI assistance
-export default async function handler(req, res) {
-    // CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+import { createClient } from '@supabase/supabase-js';
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
+const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Authenticate admin user for modifications
-    if (req.method !== 'GET') {
-        const { adminPassword } = req.body || req.query;
-        if (adminPassword !== process.env.ADMIN_PASSWORD) {
-            return res.status(401).json({ error: 'Unauthorized access' });
-        }
+export async function GET({ request }) {
+  try {
+    // Get client_id from query params or headers
+    const url = new URL(request.url);
+    const clientId = url.searchParams.get('client_id');
+    
+    let query = supabase.from('products').select('*');
+    
+    if (clientId) {
+      query = query.eq('client_id', clientId);
     }
-
-    try {
-        switch (req.method) {
-            case 'GET':
-                return handleGetProducts(req, res);
-            case 'POST':
-                return handleCreateProduct(req, res);
-            case 'PUT':
-                return handleUpdateProduct(req, res);
-            case 'DELETE':
-                return handleDeleteProduct(req, res);
-            default:
-                return res.status(405).json({ error: 'Method not allowed' });
-        }
-    } catch (error) {
-        console.error('Product catalog error:', error);
-        return res.status(500).json({ error: 'Internal server error' });
+    
+    const { data: products, error } = await query.order('name');
+    
+    if (error) {
+      throw error;
     }
+    
+    return new Response(JSON.stringify(products), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
 }
 
-async function handleGetProducts(req, res) {
-    // For now, return enhanced product data
-    // TODO: Integrate with database
-    const products = [
-        {
-            id: '1',
-            name: 'Green Detox',
-            description: 'A powerful blend of kale, spinach, cucumber, and green apple. Perfect for cleansing and energizing your body.',
-            price: 18.00,
-            image: '/images/green-detox.jpg',
-            ingredients: ['Kale', 'Spinach', 'Cucumber', 'Green Apple', 'Lemon', 'Ginger'],
-            nutritionalInfo: {
-                calories: 120,
-                protein: 4,
-                carbs: 28,
-                fiber: 6,
-                sugar: 18
-            },
-            benefits: ['Detoxification', 'Energy Boost', 'Immune Support'],
-            category: 'detox',
-            featured: true,
-            inStock: true,
-            createdAt: '2025-01-01T00:00:00Z',
-            updatedAt: '2025-01-05T12:00:00Z'
-        },
-        {
-            id: '2',
-            name: 'Tropical Paradise',
-            description: 'Escape to the tropics with our exotic blend of pineapple, mango, coconut water, and a hint of lime.',
-            price: 18.00,
-            image: '/images/tropical-paradise.jpg',
-            ingredients: ['Pineapple', 'Mango', 'Coconut Water', 'Lime', 'Passion Fruit'],
-            nutritionalInfo: {
-                calories: 140,
-                protein: 2,
-                carbs: 35,
-                fiber: 4,
-                sugar: 30
-            },
-            benefits: ['Hydration', 'Vitamin C', 'Antioxidants'],
-            category: 'tropical',
-            featured: true,
-            inStock: true,
-            createdAt: '2025-01-01T00:00:00Z',
-            updatedAt: '2025-01-05T12:00:00Z'
-        },
-        {
-            id: '3',
-            name: 'Citrus Burst',
-            description: 'Wake up your senses with our zesty combination of orange, grapefruit, lemon, and a touch of mint.',
-            price: 18.00,
-            image: '/images/citrus-burst.jpg',
-            ingredients: ['Orange', 'Grapefruit', 'Lemon', 'Lime', 'Fresh Mint'],
-            nutritionalInfo: {
-                calories: 110,
-                protein: 2,
-                carbs: 26,
-                fiber: 3,
-                sugar: 22
-            },
-            benefits: ['Vitamin C', 'Energy', 'Metabolism Boost'],
-            category: 'citrus',
-            featured: false,
-            inStock: true,
-            createdAt: '2025-01-01T00:00:00Z',
-            updatedAt: '2025-01-05T12:00:00Z'
-        }
-    ];
-
-    return res.status(200).json({
-        success: true,
-        products: products,
-        total: products.length
+export async function POST({ request }) {
+  try {
+    const body = await request.json();
+    const { user } = request.locals || {};
+    
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Get user's client context
+    const { data: userClient } = await supabase
+      .from('client_users')
+      .select('client_id')
+      .eq('user_id', user.id)
+      .single();
+    
+    const productData = {
+      ...body,
+      client_id: userClient?.client_id || body.client_id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    const { data, error } = await supabase
+      .from('products')
+      .insert([productData])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    return new Response(JSON.stringify(data), {
+      status: 201,
+      headers: { 'Content-Type': 'application/json' }
     });
+  } catch (error) {
+    console.error('Error creating product:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+export async function PUT({ request }) {
+  try {
+    const body = await request.json();
+    const { user } = request.locals || {};
+    
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    const { id, ...updateData } = body;
+    updateData.updated_at = new Date().toISOString();
+    
+    const { data, error } = await supabase
+      .from('products')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Error updating product:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+export async function DELETE({ request }) {
+  try {
+    const url = new URL(request.url);
+    const id = url.pathname.split('/').pop();
+    const { user } = request.locals || {};
+    
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'Authentication required' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
 }
 
 async function handleCreateProduct(req, res) {
