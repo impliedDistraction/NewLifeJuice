@@ -112,27 +112,52 @@ async function handleRegister(email, password, firstName, lastName, role) {
 
         // If user creation was successful, create client_user record
         if (authData.user) {
-            const { error: profileError } = await supabase
-                .from('client_users')
-                .insert([
-                    {
-                        id: authData.user.id,
-                        client_id: null, // Will be set when user is assigned to a client
-                        role: role,
-                        email: email,
-                        first_name: firstName,
-                        last_name: lastName,
-                        full_name: `${firstName} ${lastName}`,
-                        profile_data: {
-                            created_via: 'dashboard_registration',
-                            initial_role: role
-                        }
+            try {
+                // First, check if this is the first user (should be platform owner)
+                const { data: existingUsers, error: countError } = await supabase
+                    .from('client_users')
+                    .select('id', { count: 'exact' });
+                
+                const isFirstUser = !countError && existingUsers && existingUsers.length === 0;
+                
+                if (isFirstUser) {
+                    // Make first user a platform owner
+                    const { error: platformOwnerError } = await supabase
+                        .from('platform_owners')
+                        .insert([
+                            {
+                                id: authData.user.id,
+                                email: email,
+                                name: `${firstName} ${lastName}`
+                            }
+                        ]);
+                    
+                    if (platformOwnerError) {
+                        console.error('Platform owner creation error:', platformOwnerError);
+                    } else {
+                        console.log('✅ First user created as platform owner');
                     }
-                ]);
+                }
+                
+                // Create client_users record (now RLS should allow it if user is platform owner)
+                const { error: profileError } = await supabase
+                    .from('client_users')
+                    .insert([
+                        {
+                            id: authData.user.id,  // This references auth.users(id)
+                            client_id: null,       // Will be set when user is assigned to a client
+                            role: role,
+                            name: `${firstName} ${lastName}`,
+                            status: 'active'
+                        }
+                    ]);
 
-            if (profileError) {
-                console.error('Profile creation error:', profileError);
-                // Don't fail the registration if profile creation fails
+                if (profileError) {
+                    console.error('Profile creation error:', profileError);
+                    // Don't fail the registration if profile creation fails
+                }
+            } catch (error) {
+                console.error('User setup error:', error);
             }
         }
 
