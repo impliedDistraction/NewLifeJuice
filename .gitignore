@@ -25,3 +25,6 @@ pnpm-debug.log*
 .idea/
 .vercel
 .env*
+
+# Sensitive deployment files
+deploy-setup.md

@@ -1,629 +1,820 @@
 ---
-import { createClient } from '@supabase/supabase-js';
-
-// Basic auth check
-const { user } = Astro.locals;
-
-if (!user) {
-  return Astro.redirect('/admin/');
-}
-
-// Initialize Supabase client for server-side operations
-const supabaseUrl = import.meta.env.PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-// Fetch initial data for dashboard
-const { data: clients } = await supabase
-  .from('clients')
-  .select('*')
-  .order('name');
-
-const { data: products } = await supabase
-  .from('products')
-  .select('*')
-  .order('name');
-
-const { data: content } = await supabase
-  .from('content')
-  .select('*')
-  .order('updated_at', { ascending: false });
-
-// Get user's client access (for multi-tenant)
-const { data: userClient } = await supabase
-  .from('client_users')
-  .select('client_id, clients(*)')
-  .eq('user_id', user.id)
-  .single();
-
-const isOwner = user.email === 'platform@example.com'; // Platform owner check
+// Advanced AI-Powered Admin Dashboard  
+// Multi-client architecture with Supabase authentication
+import Layout from '../../layouts/Layout.astro';
+import AuthSystem from '../../components/AuthSystem.astro';
 ---
 
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Admin Dashboard - New Life Juice</title>
-    <script src="//unpkg.com/alpinejs" defer></script>
+<Layout title="New Life Juice - AI Admin Dashboard">
     <style>
-        /* Custom Dashboard Styles */
-        .tab-active {
-            background: linear-gradient(135deg, #10b981, #047857);
-            color: white;
-            box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.4);
+        /* Custom animations and gradients */
+        @keyframes gradient {
+            0%, 100% {
+                background-size: 200% 200%;
+                background-position: left center;
+            }
+            50% {
+                background-size: 200% 200%;
+                background-position: right center;
+            }
         }
         
-        .tab-inactive {
-            background: #f3f4f6;
-            color: #6b7280;
-            border: 1px solid #e5e7eb;
+        .animate-gradient {
+            animation: gradient 6s ease infinite;
         }
         
-        .tab-inactive:hover {
-            background: #e5e7eb;
-            color: #374151;
+        .animate-pulse-slow {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
         
-        .modal-backdrop {
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #10b981, #047857);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #047857, #065f46);
-            transform: translateY(-1px);
-            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
-        }
-        
-        .btn-secondary {
-            background: #f3f4f6;
-            color: #374151;
-            border: 1px solid #d1d5db;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-secondary:hover {
-            background: #e5e7eb;
-            border-color: #9ca3af;
-        }
-        
-        .card {
-            background: white;
-            border-radius: 12px;
-            border: 1px solid #e5e7eb;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-        
-        .card:hover {
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            transform: translateY(-2px);
-        }
-        
-        .fade-in {
-            animation: fadeIn 0.3s ease-in;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .animate-bounce-slow {
+            animation: bounce 2s infinite;
         }
     </style>
-</head>
-<body class="bg-gray-50 min-h-screen">
-    <div 
-        x-data="{
-            activeTab: 'overview',
-            showModal: false,
-            modalType: '',
-            editItem: null,
-            loading: false,
-            
-            // Data stores
-            clients: [],
-            products: [],
-            content: [],
-            
-            // Form data
-            form: {},
-            
-            // Initialize data
-            async init() {
-                // Set initial data from server
-                this.clients = JSON.parse(document.getElementById('clients-data').textContent);
-                this.products = JSON.parse(document.getElementById('products-data').textContent);
-                this.content = JSON.parse(document.getElementById('content-data').textContent);
-            },
-            
-            // Modal management
-            openModal(type, item = null) {
-                this.modalType = type;
-                this.editItem = item;
-                this.form = item ? {...item} : {};
-                this.showModal = true;
-            },
-            
-            closeModal() {
-                this.showModal = false;
-                this.modalType = '';
-                this.editItem = null;
-                this.form = {};
-            },
-            
-            // CRUD operations
-            async saveItem() {
-                this.loading = true;
-                try {
-                    let endpoint = '';
-                    if (this.modalType === 'products') {
-                        endpoint = '/api/product-catalog';
-                    } else if (this.modalType === 'content') {
-                        endpoint = '/api/content';
-                    } else if (this.modalType === 'clients') {
-                        endpoint = '/api/clients';
-                    }
-                    
-                    const method = this.editItem ? 'PUT' : 'POST';
-                    
-                    const response = await fetch(endpoint, {
-                        method,
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(this.form)
-                    });
-                    
-                    if (response.ok) {
-                        const result = await response.json();
-                        
-                        // Update local data
-                        if (this.editItem) {
-                            const index = this[this.modalType].findIndex(item => item.id === this.editItem.id);
-                            this[this.modalType][index] = result;
-                        } else {
-                            this[this.modalType].push(result);
-                        }
-                        
-                        this.closeModal();
-                        this.showNotification('Item saved successfully!', 'success');
-                    } else {
-                        throw new Error('Failed to save item');
-                    }
-                } catch (error) {
-                    console.error('Error saving item:', error);
-                    this.showNotification('Error saving item', 'error');
-                } finally {
-                    this.loading = false;
-                }
-            },
-            
-            async deleteItem(type, id) {
-                if (!confirm('Are you sure you want to delete this item?')) return;
-                
-                try {
-                    let endpoint = '';
-                    if (type === 'products') {
-                        endpoint = `/api/product-catalog/${id}`;
-                    } else if (type === 'content') {
-                        endpoint = `/api/content/${id}`;
-                    } else if (type === 'clients') {
-                        endpoint = `/api/clients/${id}`;
-                    }
-                    
-                    const response = await fetch(endpoint, {
-                        method: 'DELETE'
-                    });
-                    
-                    if (response.ok) {
-                        this[type] = this[type].filter(item => item.id !== id);
-                        this.showNotification('Item deleted successfully!', 'success');
-                    } else {
-                        throw new Error('Failed to delete item');
-                    }
-                } catch (error) {
-                    console.error('Error deleting item:', error);
-                    this.showNotification('Error deleting item', 'error');
-                }
-            },
-            
-            // Notifications
-            showNotification(message, type) {
-                // Simple notification implementation
-                const notification = document.createElement('div');
-                notification.className = `fixed top-4 right-4 p-4 rounded-lg text-white z-50 ${
-                    type === 'success' ? 'bg-green-500' : 'bg-red-500'
-                }`;
-                notification.textContent = message;
-                document.body.appendChild(notification);
-                
-                setTimeout(() => {
-                    notification.remove();
-                }, 3000);
-            }
-        }"
-        x-init="init()"
-        class="container mx-auto px-4 py-8"
-    >
-        <!-- Hidden data elements for Alpine.js -->
-        <script type="application/json" id="clients-data">{JSON.stringify(clients || [])}</script>
-        <script type="application/json" id="products-data">{JSON.stringify(products || [])}</script>
-        <script type="application/json" id="content-data">{JSON.stringify(content || [])}</script>
 
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Alpine.js -->
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+        <div class="bg-gray-50 min-h-screen">
+        <!-- Supabase Authentication System -->
+        <AuthSystem />
+
+        <!-- Main Dashboard -->
+        <div id="dashboard" class="hidden min-h-screen">
         <!-- Header -->
-        <div class="mb-8">
-            <div class="flex justify-between items-center">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-                    <p class="text-gray-600 mt-1">Welcome back, {user.email}</p>
-                </div>
-                <div class="flex space-x-4">
-                    <a href="/" class="btn-secondary">View Site</a>
-                    <a href="/admin/logout" class="btn-secondary">Logout</a>
+                <!-- Header -->
+        <header class="bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 shadow-lg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-6">
+                    <div class="flex items-center space-x-4">
+                        <div class="bg-white p-3 rounded-full shadow-md">
+                            <i class="fas fa-leaf text-green-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-2xl font-bold text-white flex items-center">
+                                <i class="fas fa-magic text-yellow-300 mr-2 animate-pulse-slow"></i>
+                                AI Admin Dashboard
+                            </h1>
+                            <p class="text-green-100 text-sm">Powered by OpenAI • Real-time Content Generation</p>
+                        </div>
+                        <span class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-full text-sm font-medium backdrop-blur-sm">
+                            <i class="fas fa-seedling mr-1"></i>
+                            New Life Juice
+                        </span>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <!-- User Info -->
+                        <div class="text-sm text-green-100 bg-white bg-opacity-10 px-4 py-2 rounded-lg backdrop-blur-sm">
+                            <i class="fas fa-user mr-1"></i>
+                            <span id="userDisplayName">Loading...</span>
+                            <span class="text-xs opacity-75 block">
+                                <span id="userRole">Admin</span> • 
+                                <span id="clientName">New Life Juice</span>
+                            </span>
+                        </div>
+                        
+                        <!-- Session Info -->
+                        <div class="text-sm text-green-100 bg-white bg-opacity-10 px-3 py-2 rounded-lg backdrop-blur-sm">
+                            <i class="fas fa-clock mr-1"></i>
+                            Last login: <span id="lastLogin">Just now</span>
+                        </div>
+                        
+                        <!-- User Menu -->
+                        <div class="relative" x-data="{ open: false }">
+                            <button 
+                                @click="open = !open"
+                                class="bg-white bg-opacity-20 text-white px-4 py-2 rounded-lg hover:bg-opacity-30 transition-all duration-200 backdrop-blur-sm"
+                            >
+                                <i class="fas fa-user-circle mr-1"></i>
+                                <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                            </button>
+                            
+                            <!-- Dropdown Menu -->
+                            <div 
+                                x-show="open" 
+                                @click.away="open = false"
+                                x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                x-transition:enter-end="transform opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="transform opacity-100 scale-100"
+                                x-transition:leave-end="transform opacity-0 scale-95"
+                                class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50"
+                            >
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-user mr-2"></i>Profile Settings
+                                </a>
+                                <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-cog mr-2"></i>Account Settings
+                                </a>
+                                <hr class="my-1">
+                                <button 
+                                    onclick="handleLogout()"
+                                    class="w-full text-left block px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                                >
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Sign Out
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </header>
 
-        <!-- Navigation Tabs -->
-        <div class="mb-8">
-            <div class="flex space-x-2 bg-white p-2 rounded-lg border border-gray-200">
-                <button 
-                    @click="activeTab = 'overview'"
-                    :class="activeTab === 'overview' ? 'tab-active' : 'tab-inactive'"
-                    class="px-4 py-2 rounded-md font-medium transition-all duration-200"
-                >
-                    Overview
-                </button>
-                {isOwner && (
-                    <button 
-                        @click="activeTab = 'clients'"
-                        :class="activeTab === 'clients' ? 'tab-active' : 'tab-inactive'"
-                        class="px-4 py-2 rounded-md font-medium transition-all duration-200"
-                    >
-                        Clients
-                    </button>
-                )}
-                <button 
-                    @click="activeTab = 'products'"
-                    :class="activeTab === 'products' ? 'tab-active' : 'tab-inactive'"
-                    class="px-4 py-2 rounded-md font-medium transition-all duration-200"
-                >
-                    Products
-                </button>
-                <button 
-                    @click="activeTab = 'content'"
-                    :class="activeTab === 'content' ? 'tab-active' : 'tab-inactive'"
-                    class="px-4 py-2 rounded-md font-medium transition-all duration-200"
-                >
-                    Content
-                </button>
-            </div>
-        </div>
-
-        <!-- Overview Tab -->
-        <div x-show="activeTab === 'overview'" class="fade-in">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                <!-- Stats Cards -->
-                <div class="card p-6">
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="window.dashboardData()" x-init="init()">>
+            <!-- Quick Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-xl shadow-lg border border-green-200 hover:shadow-xl transition-all duration-300">
                     <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-blue-100 text-blue-600">
-                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
+                        <div class="p-3 bg-green-500 rounded-full shadow-md">
+                            <i class="fas fa-shopping-cart text-white text-lg"></i>
                         </div>
                         <div class="ml-4">
-                            <h3 class="text-sm font-medium text-gray-500">Total Products</h3>
-                            <p class="text-2xl font-semibold text-gray-900" x-text="products.length"></p>
+                            <p class="text-sm text-green-700 font-medium">Orders Today</p>
+                            <p class="text-3xl font-bold text-green-800 animate-pulse-slow" x-text="stats.ordersToday">12</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-xl shadow-lg border border-blue-200 hover:shadow-xl transition-all duration-300">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-blue-500 rounded-full shadow-md">
+                            <i class="fas fa-robot text-white text-lg"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-blue-700 font-medium">AI Generations</p>
+                            <p class="text-3xl font-bold text-blue-800 animate-pulse-slow" x-text="stats.aiGenerations">47</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-xl shadow-lg border border-purple-200 hover:shadow-xl transition-all duration-300">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-purple-500 rounded-full shadow-md">
+                            <i class="fas fa-eye text-white text-lg"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-purple-700 font-medium">Page Views</p>
+                            <p class="text-3xl font-bold text-purple-800 animate-pulse-slow" x-text="stats.pageViews">1,234</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-xl shadow-lg border border-yellow-200 hover:shadow-xl transition-all duration-300">
+                    <div class="flex items-center">
+                        <div class="p-3 bg-yellow-500 rounded-full shadow-md">
+                            <i class="fas fa-dollar-sign text-white text-lg"></i>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm text-yellow-700 font-medium">Revenue</p>
+                            <p class="text-3xl font-bold text-yellow-800 animate-pulse-slow">$<span x-text="stats.revenue">2,856</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Content Generator -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-gradient-to-br from-white to-purple-50 p-8 rounded-xl shadow-xl border border-purple-100 hover:shadow-2xl transition-all duration-300">
+                    <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                        <div class="p-2 bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg mr-3">
+                            <i class="fas fa-magic text-white"></i>
+                        </div>
+                        AI Content Generator
+                        <span class="ml-2 px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full">LIVE</span>
+                    </h3>
+                    
+                    <form @submit.prevent="generateContent()" class="space-y-4">
+                        <!-- Quick Prompts -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Quick Prompts</label>
+                            <div class="grid grid-cols-1 gap-2">
+                                <template x-for="promptObj in quickPrompts" :key="promptObj.text">
+                                    <button 
+                                        type="button"
+                                        @click="useQuickPrompt(promptObj)"
+                                        class="text-left p-2 text-xs bg-gray-50 hover:bg-purple-50 rounded border hover:border-purple-200 transition-colors"
+                                        x-text="promptObj.text"
+                                    ></button>
+                                </template>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Content Type</label>
+                            <select 
+                                x-model="contentType"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                            >
+                                <option value="product-description">Product Description</option>
+                                <option value="marketing-copy">Marketing Copy</option>
+                                <option value="social-media">Social Media Post</option>
+                                <option value="blog-post">Blog Post</option>
+                                <option value="email-campaign">Email Campaign</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Prompt</label>
+                            <textarea 
+                                x-model="prompt"
+                                placeholder="Describe what you want to generate..."
+                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 h-24"
+                                required
+                            ></textarea>
+                        </div>
+                        
+                        <button 
+                            type="submit"
+                            class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all font-semibold"
+                            :disabled="generating"
+                        >
+                            <span x-show="!generating">
+                                <i class="fas fa-wand-magic-sparkles mr-2"></i>
+                                Generate Content
+                            </span>
+                            <span x-show="generating" class="flex items-center justify-center">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>
+                                Generating...
+                            </span>
+                        </button>
+                    </form>
+                    
+                    <div x-show="generatedContent" class="mt-6 p-6 bg-gradient-to-r from-green-50 to-blue-50 rounded-xl border border-green-200">
+                        <h4 class="font-bold text-gray-800 mb-3 flex items-center">
+                            <i class="fas fa-sparkles text-purple-600 mr-2"></i>
+                            Generated Content:
+                        </h4>
+                        <div class="bg-white p-4 rounded-lg border border-gray-200 max-h-48 overflow-y-auto mb-4">
+                            <p x-text="generatedContent" class="text-gray-700 whitespace-pre-wrap leading-relaxed"></p>
+                        </div>
+                        
+                        <!-- Action buttons -->
+                        <div class="flex flex-wrap gap-2">
+                            <button 
+                                @click="copyToClipboard(generatedContent)"
+                                class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-200 font-semibold shadow-lg text-sm"
+                            >
+                                <i class="fas fa-copy mr-1"></i>
+                                Copy to Clipboard
+                            </button>
+                            
+                            <button 
+                                @click="markAsUsed(generationHistory[0])"
+                                x-show="generationHistory.length > 0"
+                                class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-semibold shadow-lg text-sm"
+                            >
+                                <i class="fas fa-check mr-1"></i>
+                                Mark as Used
+                            </button>
+                            
+                            <button 
+                                @click="prompt = ''; generatedContent = ''"
+                                class="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-4 py-2 rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-200 font-semibold shadow-lg text-sm"
+                            >
+                                <i class="fas fa-refresh mr-1"></i>
+                                New Generation
+                            </button>
                         </div>
                     </div>
                 </div>
 
-                {isOwner && (
-                    <div class="card p-6">
-                        <div class="flex items-center">
-                            <div class="p-3 rounded-full bg-green-100 text-green-600">
-                                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
-                                </svg>
+                <!-- AI Generation History -->
+                <div class="bg-gradient-to-br from-white to-orange-50 p-8 rounded-xl shadow-xl border border-orange-100 hover:shadow-2xl transition-all duration-300">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-gray-900 flex items-center">
+                            <div class="p-2 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-lg mr-3">
+                                <i class="fas fa-history text-white"></i>
                             </div>
-                            <div class="ml-4">
-                                <h3 class="text-sm font-medium text-gray-500">Active Clients</h3>
-                                <p class="text-2xl font-semibold text-gray-900" x-text="clients.length"></p>
-                            </div>
+                            Generation History
+                            <span class="ml-2 px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full" x-text="generationHistory.length"></span>
+                        </h3>
+                        
+                        <div class="flex space-x-2">
+                            <button 
+                                @click="toggleGenerationHistory()"
+                                class="bg-orange-500 text-white px-3 py-2 rounded-lg hover:bg-orange-600 transition-colors text-sm"
+                            >
+                                <i class="fas fa-list mr-1"></i>
+                                <span x-text="showGenerationHistory ? 'Hide' : 'Show'"></span>
+                            </button>
+                            
+                            <button 
+                                @click="clearHistory()"
+                                x-show="generationHistory.length > 0"
+                                class="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm"
+                            >
+                                <i class="fas fa-trash mr-1"></i>
+                                Clear
+                            </button>
                         </div>
                     </div>
-                )}
-
-                <div class="card p-6">
-                    <div class="flex items-center">
-                        <div class="p-3 rounded-full bg-purple-100 text-purple-600">
-                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 102 0V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 2a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"/>
-                            </svg>
-                        </div>
-                        <div class="ml-4">
-                            <h3 class="text-sm font-medium text-gray-500">Content Blocks</h3>
-                            <p class="text-2xl font-semibold text-gray-900" x-text="content.length"></p>
+                    
+                    <!-- History List -->
+                    <div x-show="showGenerationHistory" class="space-y-3 max-h-64 overflow-y-auto">
+                        <template x-for="generation in generationHistory" :key="generation.id">
+                            <div class="bg-white p-4 rounded-lg border shadow-sm hover:shadow-md transition-shadow">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <span 
+                                            class="px-2 py-1 text-xs rounded-full font-medium"
+                                            :class="getContentTypeBadge(generation.type)"
+                                            x-text="generation.type.replace('-', ' ').toUpperCase()"
+                                        ></span>
+                                        <span 
+                                            x-show="generation.used"
+                                            class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 font-medium"
+                                        >
+                                            USED
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="flex space-x-1">
+                                        <button 
+                                            @click="selectGeneration(generation)"
+                                            class="text-blue-600 hover:text-blue-800 p-1"
+                                            title="View Details"
+                                        >
+                                            <i class="fas fa-eye text-sm"></i>
+                                        </button>
+                                        <button 
+                                            @click="copyToClipboard(generation.content)"
+                                            class="text-green-600 hover:text-green-800 p-1"
+                                            title="Copy Content"
+                                        >
+                                            <i class="fas fa-copy text-sm"></i>
+                                        </button>
+                                        <button 
+                                            @click="deleteGeneration(generation.id)"
+                                            class="text-red-600 hover:text-red-800 p-1"
+                                            title="Delete"
+                                        >
+                                            <i class="fas fa-trash text-sm"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <p class="text-sm text-gray-600 mb-2 font-medium" x-text="generation.prompt"></p>
+                                <p class="text-xs text-gray-500" x-text="formatDate(generation.timestamp)"></p>
+                            </div>
+                        </template>
+                        
+                        <div x-show="generationHistory.length === 0" class="text-center py-8 text-gray-500">
+                            <i class="fas fa-robot text-3xl mb-2"></i>
+                            <p>No AI generations yet. Create your first one!</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Quick Actions -->
-            <div class="card p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-                <div class="flex flex-wrap gap-4">
-                    <button 
-                        @click="openModal('products')"
-                        class="btn-primary"
-                    >
-                        Add New Product
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center">
+                    <i class="fas fa-lightning-bolt text-yellow-500 mr-2"></i>
+                    Quick Actions
+                </h3>
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <button class="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-center">
+                        <i class="fas fa-images text-blue-600 text-2xl mb-2"></i>
+                        <p class="text-sm font-medium text-blue-800">Manage Images</p>
                     </button>
-                    <button 
-                        @click="openModal('content')"
-                        class="btn-primary"
-                    >
-                        Create Content Block
+                    
+                    <button class="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-center">
+                        <i class="fas fa-chart-line text-purple-600 text-2xl mb-2"></i>
+                        <p class="text-sm font-medium text-purple-800">View Analytics</p>
                     </button>
-                    {isOwner && (
-                        <button 
-                            @click="openModal('clients')"
-                            class="btn-primary"
-                        >
-                            Add New Client
-                        </button>
-                    )}
+                    
+                    <button class="p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors text-center">
+                        <i class="fas fa-cog text-orange-600 text-2xl mb-2"></i>
+                        <p class="text-sm font-medium text-orange-800">Settings</p>
+                    </button>
+                    
+                    <button class="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors text-center">
+                        <i class="fas fa-plus text-green-600 text-2xl mb-2"></i>
+                        <p class="text-sm font-medium text-green-800">Add Product</p>
+                    </button>
                 </div>
             </div>
-        </div>
 
-        <!-- Clients Tab (Owner Only) -->
-        {isOwner && (
-            <div x-show="activeTab === 'clients'" class="fade-in">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-xl font-semibold text-gray-900">Client Management</h2>
-                    <button @click="openModal('clients')" class="btn-primary">
-                        Add New Client
-                    </button>
+            <!-- Recent Activity -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="p-6 border-b border-gray-200">
+                    <h3 class="text-lg font-bold text-gray-900">
+                        <i class="fas fa-clock text-gray-600 mr-2"></i>
+                        Recent Activity
+                    </h3>
                 </div>
-
-                <div class="grid gap-4">
-                    <template x-for="client in clients" :key="client.id">
-                        <div class="card p-6">
-                            <div class="flex justify-between items-start">
-                                <div class="flex-1">
-                                    <h3 class="text-lg font-semibold text-gray-900" x-text="client.name"></h3>
-                                    <p class="text-gray-600" x-text="client.domain"></p>
-                                    <div class="mt-2">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" x-text="client.status"></span>
-                                    </div>
-                                </div>
-                                <div class="flex space-x-2 ml-4">
-                                    <button 
-                                        @click="openModal('clients', client)"
-                                        class="btn-secondary text-sm"
-                                    >
-                                        Edit
-                                    </button>
-                                    <button 
-                                        @click="deleteItem('clients', client.id)"
-                                        class="btn-secondary text-sm text-red-600"
-                                    >
-                                        Delete
-                                    </button>
-                                </div>
+                
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div class="flex items-center space-x-4 p-3 bg-green-50 rounded-lg">
+                            <div class="p-2 bg-green-100 rounded-full">
+                                <i class="fas fa-shopping-cart text-green-600"></i>
                             </div>
-                        </div>
-                    </template>
-                </div>
-            </div>
-        )}
-
-        <!-- Products Tab -->
-        <div x-show="activeTab === 'products'" class="fade-in">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-semibold text-gray-900">Product Management</h2>
-                <button @click="openModal('products')" class="btn-primary">
-                    Add New Product
-                </button>
-            </div>
-
-            <div class="grid gap-4">
-                <template x-for="product in products" :key="product.id">
-                    <div class="card p-6">
-                        <div class="flex justify-between items-start">
                             <div class="flex-1">
-                                <h3 class="text-lg font-semibold text-gray-900" x-text="product.name"></h3>
-                                <p class="text-gray-600" x-text="product.description"></p>
-                                <div class="mt-2 flex items-center space-x-4">
-                                    <span class="text-lg font-bold text-green-600" x-text="'$' + product.price"></span>
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" x-text="product.category"></span>
-                                </div>
+                                <p class="text-sm font-medium text-gray-900">New order received</p>
+                                <p class="text-xs text-gray-600">5 Tropical Paradise juices - $90.00</p>
                             </div>
-                            <div class="flex space-x-2 ml-4">
-                                <button 
-                                    @click="openModal('products', product)"
-                                    class="btn-secondary text-sm"
-                                >
-                                    Edit
-                                </button>
-                                <button 
-                                    @click="deleteItem('products', product.id)"
-                                    class="btn-secondary text-sm text-red-600"
-                                >
-                                    Delete
-                                </button>
+                            <span class="text-xs text-gray-500">2 min ago</span>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 p-3 bg-blue-50 rounded-lg">
+                            <div class="p-2 bg-blue-100 rounded-full">
+                                <i class="fas fa-robot text-blue-600"></i>
                             </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900">AI content generated</p>
+                                <p class="text-xs text-gray-600">New product description for Green Detox</p>
+                            </div>
+                            <span class="text-xs text-gray-500">15 min ago</span>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4 p-3 bg-yellow-50 rounded-lg">
+                            <div class="p-2 bg-yellow-100 rounded-full">
+                                <i class="fas fa-user text-yellow-600"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-gray-900">New customer registration</p>
+                                <p class="text-xs text-gray-600">sarah.johnson@email.com</p>
+                            </div>
+                            <span class="text-xs text-gray-500">1 hour ago</span>
                         </div>
                     </div>
-                </template>
+                </div>
             </div>
-        </div>
-
-        <!-- Content Tab -->
-        <div x-show="activeTab === 'content'" class="fade-in">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-semibold text-gray-900">Content Management</h2>
-                <button @click="openModal('content')" class="btn-primary">
-                    Create Content Block
-                </button>
-            </div>
-
-            <div class="grid gap-4">
-                <template x-for="item in content" :key="item.id">
-                    <div class="card p-6">
-                        <div class="flex justify-between items-start">
-                            <div class="flex-1">
-                                <h3 class="text-lg font-semibold text-gray-900" x-text="item.title"></h3>
-                                <p class="text-gray-600" x-text="item.content_type"></p>
-                                <p class="text-sm text-gray-500 mt-2" x-text="item.content.substring(0, 100) + '...'"></p>
-                            </div>
-                            <div class="flex space-x-2 ml-4">
-                                <button 
-                                    @click="openModal('content', item)"
-                                    class="btn-secondary text-sm"
-                                >
-                                    Edit
-                                </button>
-                                <button 
-                                    @click="deleteItem('content', item.id)"
-                                    class="btn-secondary text-sm text-red-600"
-                                >
-                                    Delete
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-            </div>
-        </div>
-
-        <!-- Universal Modal -->
+        </main>
+        
+        <!-- Generation Details Modal -->
         <div 
-            x-show="showModal" 
-            class="fixed inset-0 z-50 overflow-y-auto"
+            x-show="selectedGeneration" 
             x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100"
             x-transition:leave="transition ease-in duration-200"
             x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0"
+            class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4"
+            @click.self="selectedGeneration = null"
         >
-            <div class="flex items-center justify-center min-h-screen px-4">
-                <div class="modal-backdrop fixed inset-0" @click="closeModal()"></div>
-                
-                <div class="modal-content relative w-full max-w-md p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold text-gray-900" 
-                            x-text="(editItem ? 'Edit' : 'Add') + ' ' + modalType.charAt(0).toUpperCase() + modalType.slice(1)">
+            <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+                <!-- Modal Header -->
+                <div class="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-xl font-bold flex items-center">
+                            <i class="fas fa-robot mr-2"></i>
+                            AI Generation Details
                         </h3>
-                        <button @click="closeModal()" class="text-gray-400 hover:text-gray-600">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
+                        <button 
+                            @click="selectedGeneration = null"
+                            class="text-white hover:text-gray-300 text-xl"
+                        >
+                            <i class="fas fa-times"></i>
                         </button>
                     </div>
-
-                    <!-- Dynamic Form Content -->
-                    <form @submit.prevent="saveItem()">
-                        <!-- Client Form -->
-                        <div x-show="modalType === 'clients'">
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Name</label>
-                                    <input type="text" x-model="form.name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Domain</label>
-                                    <input type="text" x-model="form.domain" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                </div>
+                
+                <!-- Modal Content -->
+                <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                    <template x-if="selectedGeneration">
+                        <div class="space-y-4">
+                            <!-- Generation Info -->
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                <span 
+                                    class="px-3 py-1 text-sm rounded-full font-medium"
+                                    :class="getContentTypeBadge(selectedGeneration.type)"
+                                    x-text="selectedGeneration.type.replace('-', ' ').toUpperCase()"
+                                ></span>
+                                <span 
+                                    x-show="selectedGeneration.used"
+                                    class="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800 font-medium"
+                                >
+                                    USED
+                                </span>
+                                <span class="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-800 font-medium" x-text="formatDate(selectedGeneration.timestamp)"></span>
+                            </div>
+                            
+                            <!-- Original Prompt -->
+                            <div>
+                                <h4 class="font-semibold text-gray-800 mb-2">Original Prompt:</h4>
+                                <div class="bg-gray-50 p-3 rounded-lg">
+                                    <p class="text-gray-700" x-text="selectedGeneration.prompt"></p>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Product Form -->
-                        <div x-show="modalType === 'products'">
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Name</label>
-                                    <input type="text" x-model="form.name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Description</label>
-                                    <textarea x-model="form.description" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"></textarea>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Price</label>
-                                    <input type="number" x-model="form.price" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Category</label>
-                                    <select x-model="form.category" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                                        <option value="juice">Juice</option>
-                                        <option value="smoothie">Smoothie</option>
-                                        <option value="supplement">Supplement</option>
-                                    </select>
+                            
+                            <!-- Generated Content -->
+                            <div>
+                                <h4 class="font-semibold text-gray-800 mb-2">Generated Content:</h4>
+                                <div class="bg-white border border-gray-200 p-4 rounded-lg max-h-64 overflow-y-auto">
+                                    <p class="text-gray-700 whitespace-pre-wrap leading-relaxed" x-text="selectedGeneration.content"></p>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Content Form -->
-                        <div x-show="modalType === 'content'">
-                            <div class="space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Title</label>
-                                    <input type="text" x-model="form.title" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Type</label>
-                                    <select x-model="form.content_type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                                        <option value="hero">Hero Section</option>
-                                        <option value="about">About Section</option>
-                                        <option value="testimonial">Testimonial</option>
-                                        <option value="feature">Feature Block</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700">Content</label>
-                                    <textarea x-model="form.content" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500"></textarea>
-                                </div>
+                            
+                            <!-- Actions -->
+                            <div class="flex flex-wrap gap-2 pt-4 border-t">
+                                <button 
+                                    @click="copyToClipboard(selectedGeneration.content)"
+                                    class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                                >
+                                    <i class="fas fa-copy mr-1"></i>
+                                    Copy Content
+                                </button>
+                                
+                                <button 
+                                    @click="markAsUsed(selectedGeneration)"
+                                    x-show="!selectedGeneration.used"
+                                    class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                                >
+                                    <i class="fas fa-check mr-1"></i>
+                                    Mark as Used
+                                </button>
+                                
+                                <button 
+                                    @click="deleteGeneration(selectedGeneration.id)"
+                                    class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
+                                >
+                                    <i class="fas fa-trash mr-1"></i>
+                                    Delete
+                                </button>
+                                
+                                <button 
+                                    @click="prompt = selectedGeneration.prompt; contentType = selectedGeneration.type; selectedGeneration = null"
+                                    class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors"
+                                >
+                                    <i class="fas fa-redo mr-1"></i>
+                                    Regenerate
+                                </button>
                             </div>
                         </div>
-
-                        <!-- Form Actions -->
-                        <div class="flex justify-end space-x-3 mt-6">
-                            <button type="button" @click="closeModal()" class="btn-secondary">
-                                Cancel
-                            </button>
-                            <button 
-                                type="submit" 
-                                class="btn-primary"
-                                :disabled="loading"
-                                x-text="loading ? 'Saving...' : 'Save'"
-                            >
-                            </button>
-                        </div>
-                    </form>
+                    </template>
                 </div>
             </div>
         </div>
     </div>
-</body>
-</html>
+
+    <script>
+        // Alpine.js data - Define in global scope for static builds
+        window.dashboardData = function() {
+            return {
+                contentType: 'product-description',
+                prompt: '',
+                generatedContent: '',
+                generating: false,
+                showGenerationHistory: false,
+                generationHistory: JSON.parse(localStorage.getItem('aiGenerationHistory') || '[]'),
+                selectedGeneration: null,
+                stats: {
+                    ordersToday: 12,
+                    aiGenerations: JSON.parse(localStorage.getItem('aiGenerationHistory') || '[]').length,
+                    pageViews: 1234,
+                    revenue: 2856
+                },
+                
+                // Quick prompts for common use cases
+                quickPrompts: [
+                    { type: 'product-description', text: 'Write a compelling product description for a healthy green juice blend' },
+                    { type: 'marketing-copy', text: 'Create catchy hero section copy for a premium juice delivery service' },
+                    { type: 'social-media', text: 'Write an engaging Instagram post about the benefits of cold-pressed juice' },
+                    { type: 'email-campaign', text: 'Create a welcome email for new juice subscription customers' },
+                    { type: 'blog-post', text: 'Write an introduction for a blog post about juice cleansing benefits' }
+                ],
+                
+                // Initialize component
+                init() {
+                    this.stats.aiGenerations = this.generationHistory.length;
+                },
+                
+                // Use quick prompt
+                useQuickPrompt(promptObj) {
+                    this.contentType = promptObj.type;
+                    this.prompt = promptObj.text;
+                },
+                
+                // Sanitize HTML content to prevent XSS
+                sanitizeContent(content) {
+                    const div = document.createElement('div');
+                    div.textContent = content;
+                    return div.innerHTML;
+                },
+                
+                async generateContent() {
+                    if (!this.prompt.trim()) {
+                        alert('Please enter a prompt');
+                        return;
+                    }
+                    
+                    this.generating = true;
+                    this.generatedContent = '';
+                    
+                    try {
+                        const response = await fetch('/api/ai-assistant', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                prompt: this.prompt,
+                                type: this.contentType,
+                                adminPassword: localStorage.getItem('adminPassword')
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            const sanitizedContent = this.sanitizeContent(data.suggestion);
+                            this.generatedContent = data.suggestion; // Keep original for display
+                            
+                            // Save to history
+                            const generation = {
+                                id: Date.now(),
+                                prompt: this.prompt,
+                                type: this.contentType,
+                                content: data.suggestion,
+                                sanitizedContent: sanitizedContent,
+                                timestamp: new Date().toISOString(),
+                                used: false
+                            };
+                            
+                            this.generationHistory.unshift(generation);
+                            localStorage.setItem('aiGenerationHistory', JSON.stringify(this.generationHistory));
+                            this.stats.aiGenerations = this.generationHistory.length;
+                            
+                        } else {
+                            alert('Error generating content: ' + data.error);
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        alert('Error generating content. Please try again.');
+                    } finally {
+                        this.generating = false;
+                    }
+                },
+                
+                // Show generation history
+                toggleGenerationHistory() {
+                    this.showGenerationHistory = !this.showGenerationHistory;
+                },
+                
+                // Select a generation for detailed view
+                selectGeneration(generation) {
+                    this.selectedGeneration = generation;
+                },
+                
+                // Mark generation as used
+                markAsUsed(generation) {
+                    generation.used = true;
+                    localStorage.setItem('aiGenerationHistory', JSON.stringify(this.generationHistory));
+                    this.showSuccessToast('Marked as used!');
+                },
+                
+                // Delete a generation
+                deleteGeneration(generationId) {
+                    if (confirm('Are you sure you want to delete this generation?')) {
+                        this.generationHistory = this.generationHistory.filter(g => g.id !== generationId);
+                        localStorage.setItem('aiGenerationHistory', JSON.stringify(this.generationHistory));
+                        this.stats.aiGenerations = this.generationHistory.length;
+                        this.selectedGeneration = null;
+                        this.showSuccessToast('Generation deleted!');
+                    }
+                },
+                
+                // Clear all history
+                clearHistory() {
+                    if (confirm('Are you sure you want to clear all generation history?')) {
+                        this.generationHistory = [];
+                        localStorage.removeItem('aiGenerationHistory');
+                        this.stats.aiGenerations = 0;
+                        this.selectedGeneration = null;
+                        this.showGenerationHistory = false;
+                        this.showSuccessToast('History cleared!');
+                    }
+                },
+                
+                // Format date for display
+                formatDate(isoString) {
+                    return new Date(isoString).toLocaleString();
+                },
+                
+                // Get content type badge color
+                getContentTypeBadge(type) {
+                    const badges = {
+                        'product-description': 'bg-green-100 text-green-800',
+                        'marketing-copy': 'bg-blue-100 text-blue-800',
+                        'social-media': 'bg-purple-100 text-purple-800',
+                        'blog-post': 'bg-yellow-100 text-yellow-800',
+                        'email-campaign': 'bg-red-100 text-red-800'
+                    };
+                    return badges[type] || 'bg-gray-100 text-gray-800';
+                },
+                
+                // Show success toast
+                showSuccessToast(message) {
+                    // Create and show a temporary toast notification
+                    const toast = document.createElement('div');
+                    toast.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50';
+                    toast.innerHTML = `<i class="fas fa-check mr-2"></i>${message}`;
+                    document.body.appendChild(toast);
+                    
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 3000);
+                },
+                
+                copyToClipboard(text) {
+                    navigator.clipboard.writeText(text).then(() => {
+                        // Show success feedback
+                        const button = event.target;
+                        const originalText = button.innerHTML;
+                        button.innerHTML = '<i class="fas fa-check mr-1"></i>Copied!';
+                        button.classList.add('bg-green-700');
+                        
+                        setTimeout(() => {
+                            button.innerHTML = originalText;
+                            button.classList.remove('bg-green-700');
+                        }, 2000);
+                    });
+                }
+            }
+        }
+        
+        // Authentication functions - Global scope
+        window.authenticate = async function() {
+            const form = document.getElementById('authForm');
+            const passwordInput = document.getElementById('adminPassword');
+            const errorDiv = document.getElementById('authError');
+            
+            if (!form || form.hasListener) return; // Prevent multiple listeners
+            
+            form.hasListener = true; // Mark that listener is attached
+            
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const password = passwordInput.value;
+                
+                try {
+                    // Test the password with a simple API call
+                    const response = await fetch('/api/ai-assistant', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            test: true,
+                            adminPassword: password
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        // Store password and show dashboard
+                        localStorage.setItem('adminPassword', password);
+                        document.getElementById('authGuard').style.display = 'none';
+                        document.getElementById('dashboard').classList.remove('hidden');
+                        errorDiv.classList.add('hidden');
+                    } else {
+                        throw new Error('Invalid password');
+                    }
+                } catch (error) {
+                    errorDiv.textContent = 'Invalid password. Please try again.';
+                    errorDiv.classList.remove('hidden');
+                    passwordInput.value = '';
+                }
+            });
+        }
+        
+        window.logout = function() {
+            localStorage.removeItem('adminPassword');
+            location.reload();
+        }
+        
+        // Check if already authenticated
+        window.checkAuth = async function() {
+            const savedPassword = localStorage.getItem('adminPassword');
+            if (savedPassword) {
+                // Don't test the password with API call on every load
+                // Just show the dashboard if password exists
+                document.getElementById('authGuard').style.display = 'none';
+                document.getElementById('dashboard').classList.remove('hidden');
+                return true;
+            }
+            return false;
+        }
+        
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if user is already authenticated first
+            const isAuthenticated = checkAuth();
+            
+            // Only initialize authentication form if not already authenticated
+            if (!isAuthenticated) {
+                authenticate();
+            }
+        });
+    </script>
+    </div>
+</Layout>
