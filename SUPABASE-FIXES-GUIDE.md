@@ -69,35 +69,30 @@ CREATE POLICY "Enable delete for users" ON storage.objects
     FOR DELETE USING (bucket_id = 'client-assets' AND auth.uid()::text = (storage.foldername(name))[1]);
 ```
 
-### **4. Add Missing Database Table**
+### **4. ✅ Verify Client Files Table**
 
-**Problem**: `client_files` table needed for image management  
-**Solution**: Run this SQL:
+**Status**: ✅ Table already exists!  
+**Solution**: Just verify RLS policy exists:
 
 ```sql
--- Create client_files table for image management
-CREATE TABLE client_files (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    client_id UUID REFERENCES clients(id) ON DELETE CASCADE,
-    filename VARCHAR(255) NOT NULL,
-    storage_path VARCHAR(500) NOT NULL,
-    public_url VARCHAR(500) NOT NULL,
-    file_type VARCHAR(50) NOT NULL,
-    file_size INTEGER NOT NULL,
-    category VARCHAR(100) DEFAULT 'general',
-    status VARCHAR(50) DEFAULT 'active',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- Verify client_files table and add RLS policy if needed
+DO $$
+BEGIN
+    -- Only create the policy if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_policies 
+        WHERE tablename = 'client_files' 
+        AND policyname = 'client_files_access'
+    ) THEN
+        CREATE POLICY "client_files_access" ON client_files
+            FOR ALL USING (
+                client_id = get_user_client_id() OR is_platform_owner()
+            );
+    END IF;
+END $$;
 
--- Enable RLS
+-- Ensure RLS is enabled
 ALTER TABLE client_files ENABLE ROW LEVEL SECURITY;
-
--- Add RLS policy
-CREATE POLICY "client_files_access" ON client_files
-    FOR ALL USING (
-        client_id = get_user_client_id() OR is_platform_owner()
-    );
 ```
 
 ## 🧪 **TESTING YOUR FIXES**
